@@ -1,0 +1,6 @@
+{
+  "version": "3.8.9",
+  "build": "2026101304",
+  "transport": "browser HTTPS",
+  "route": "direct Supabase"
+}

@@ -4990,12 +4990,16 @@ html:root :is(.btn-danger,.rp-select button.on,.rp-speed .rs.on){color:var(--tex
 html:root :is(.prof-item,.hist-row,.set-cat,.set-link,.cal-d,.cal-nav,.hl-track,.map-layer-seg button,.set-crumb,.chip,.badge,.tag){background-color:transparent!important;background-image:none!important}
 @media(prefers-reduced-motion:reduce){.thread-press-wave{display:none}html:root [data-press-motion]:active{scale:1;translate:none}}
 
+html:root .fullmap .map-tools{display:grid;grid-template-columns:46px 46px;grid-template-rows:46px;column-gap:12px;width:104px;height:46px;align-items:end}
+html:root .fullmap .map-tools>#map-locate{grid-column:1;grid-row:1}
+html:root .fullmap .map-tools>.home-settings{grid-column:2;grid-row:1}
+
 </style>
 
 <!-- 云端数据库配置（公开的 anon key，表已锁死，读写只走 SECURITY DEFINER 函数） -->
 <script>window.SiteDB={config:{url:"https://zloaudskrsdlisgwyfvt.supabase.co",key:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpsb2F1ZHNrcnNkbGlzZ3d5ZnZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3NTExMjIsImV4cCI6MjEwMzMyNzEyMn0.4TWnLMChq7C00NGK1DRAfYdyPb5udhqkj679nMCA8A4"}};</script>
 <!-- 构建信息：版本号 / 构建号 / 构建时间（自动更新与「关于」页读取） -->
-<script>window.PM_BUILD={"name": "同屏 Ping", "version": "3.8.15", "build": "2026101407", "notes": "实时点改由地图标记外层短按可靠打开状态面板，并保留键盘路径与原地轻弹。"};window.PM_CLOUD_GATEWAY={"url": "", "project": "zloaudskrsdlisgwyfvt"};</script>
+<script>window.PM_BUILD={"name": "同屏 Ping", "version": "3.8.16", "build": "2026101408", "notes": "固定地图定位与设置按键并排显示，定位键位于设置键左侧。"};window.PM_CLOUD_GATEWAY={"url": "", "project": "zloaudskrsdlisgwyfvt"};</script>
 <link rel="stylesheet" href="vendor/leaflet.css">
 
 

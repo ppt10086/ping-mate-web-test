@@ -4995,7 +4995,7 @@ html:root :is(.prof-item,.hist-row,.set-cat,.set-link,.cal-d,.cal-nav,.hl-track,
 <!-- 云端数据库配置（公开的 anon key，表已锁死，读写只走 SECURITY DEFINER 函数） -->
 <script>window.SiteDB={config:{url:"https://zloaudskrsdlisgwyfvt.supabase.co",key:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpsb2F1ZHNrcnNkbGlzZ3d5ZnZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3NTExMjIsImV4cCI6MjEwMzMyNzEyMn0.4TWnLMChq7C00NGK1DRAfYdyPb5udhqkj679nMCA8A4"}};</script>
 <!-- 构建信息：版本号 / 构建号 / 构建时间（自动更新与「关于」页读取） -->
-<script>window.PM_BUILD={"name": "同屏 Ping", "version": "3.8.14", "build": "2026101406", "notes": "地图控件针织底图与自适应文字；修复实时点点击并改为轻弹回馈。"};window.PM_CLOUD_GATEWAY={"url": "", "project": "zloaudskrsdlisgwyfvt"};</script>
+<script>window.PM_BUILD={"name": "同屏 Ping", "version": "3.8.15", "build": "2026101407", "notes": "实时点改由地图标记外层短按可靠打开状态面板，并保留键盘路径与原地轻弹。"};window.PM_CLOUD_GATEWAY={"url": "", "project": "zloaudskrsdlisgwyfvt"};</script>
 <link rel="stylesheet" href="vendor/leaflet.css">
 
 
@@ -10312,13 +10312,12 @@ const Home = {
     if(!m) return;
     const me=this.point('me'),pa=this.point('pa');
     [ ['me',me],['pa',pa] ].forEach(([who,p]) => {
-      if(!p){ MapX.clear('home',who); MapX.circleClear('home','acc-'+who); return; }
+      if(!p){ const stale=MapX.markers.home&&MapX.markers.home[who];stale?._pmTapCleanup?.();MapX.clear('home',who); MapX.circleClear('home','acc-'+who); return; }
       const lv=signalLevel(fixLevel(p.ts,p.acc,p.spd,who==='me'));
       MapX.move('home',who,Number(p.lat),Number(p.lng),signalColor(lv),this.name(who).slice(0,4),true,900,'live',MapX.Z_LIVE);
       this.paintMarkerAvatar(who,p);
       const mk=MapX.markers.home[who];
-      if(mk && !mk._pmPick){ mk._pmPick=true; mk.on('click',()=>this.openPoint(who)); }
-      if(mk){const el=mk.getElement(),dot=el&&el.querySelector('.pm-dot.live');if(dot)ThreadMotion?.bindLive(dot,who);}
+      this.bindLivePoint(who,mk);
       const acc=Number(p.acc);
       if(acc>0 && acc<=120){
         MapX.circle('home','acc-'+who,p.lat,p.lng,acc,{color:signalColor(lv),weight:1,opacity:.25,fillOpacity:.055});
@@ -10329,6 +10328,36 @@ const Home = {
     this.speeds(); this.edges();
     this.refresh(); Follow.tick(me);
     if(me&&!m._pmCamera)MapX.warmCity(me);
+  },
+  bindLivePoint(who,mk){
+    if(!mk)return;
+    if(!mk._pmPick){mk._pmPick=true;mk.on('click',()=>this.openPoint(who));}
+    const el=mk.getElement();if(!el||mk._pmTapElement===el)return;
+    mk._pmTapCleanup?.();
+    let start=null;
+    const cancel=()=>{start=null;};
+    const down=e=>{
+      if(e.isPrimary===false||(e.button!=null&&e.button!==0)){start=null;return;}
+      start={id:e.pointerId,x:e.clientX,y:e.clientY,at:performance.now()};
+    };
+    const up=e=>{
+      const p=start;if(!p||p.id!==e.pointerId)return;start=null;
+      if(e.type!=='pointerup'||performance.now()-p.at>900||Math.hypot(e.clientX-p.x,e.clientY-p.y)>10)return;
+      if(el.isConnected)this.openPoint(who);
+    };
+    el.addEventListener('pointerdown',down,true);
+    window.addEventListener('pointerup',up,true);
+    window.addEventListener('pointercancel',up,true);
+    window.addEventListener('blur',cancel);
+    mk._pmTapElement=el;
+    mk._pmTapCleanup=()=>{
+      el.removeEventListener('pointerdown',down,true);
+      window.removeEventListener('pointerup',up,true);
+      window.removeEventListener('pointercancel',up,true);
+      window.removeEventListener('blur',cancel);
+      mk._pmTapElement=null;mk._pmTapCleanup=null;cancel();
+    };
+    const dot=el.querySelector('.pm-dot.live');if(dot)ThreadMotion?.bindLive(dot);
   },
   paintMarkerAvatar(who,p){
     const mk=MapX.markers.home&&MapX.markers.home[who],el=mk&&mk.getElement(),dot=el&&el.querySelector('.pm-dot');
@@ -10395,7 +10424,7 @@ const Home = {
   },
   openPoint(who){
     if(!['me','pa'].includes(who))return;
-    const now=Date.now();if(this._lastPointOpen===who&&now-(this._lastPointOpenAt||0)<450)return;
+    const now=Date.now();if(this._lastPointOpen===who&&now-(this._lastPointOpenAt||0)<450&&this._expanded&&this._selected===who)return;
     this._lastPointOpen=who;this._lastPointOpenAt=now;this.overview(who);
   },
   expand(force){
@@ -13291,7 +13320,7 @@ if(typeof document!=='undefined')ThreadFrames.boot();
 if(typeof module!=='undefined'&&module.exports)module.exports=ThreadFrames;
 /* Motion 14.2.0 (MIT): press, native springs and stagger. */
 window.ThreadMotion=(()=>{
-  const selector='button,[role="button"],.prof-item[onclick],.hist-row[onclick],.pm-dot.live',bound=new WeakSet(),states=new WeakMap(),owners=new WeakMap();
+  const selector='button,[role="button"],.prof-item[onclick],.hist-row[onclick],.pm-dot.live',bound=new WeakSet(),states=new WeakMap();
   const reduced=()=>matchMedia('(prefers-reduced-motion:reduce)').matches;
   function spring(el,to,release){
     const old=states.get(el),from=parseFloat(getComputedStyle(el).scale)||1;
@@ -13309,20 +13338,18 @@ window.ThreadMotion=(()=>{
     const a=Motion.animateMini(w,{scale:[.45,1.5],opacity:[.5,0]},{duration:.66,ease:[.16,1,.3,1]});
     a.finished.then(()=>w.remove());
   }
-  function bind(el,who){
-    if(who)owners.set(el,who);
+  function bind(el){
     if(bound.has(el))return;bound.add(el);el.dataset.pressMotion='spring';
     Motion.press(el,()=>{
       if(el.disabled||el.getAttribute('aria-disabled')==='true'||el.closest('[inert]'))return;
       if(reduced()){el.classList.add('motion-soft-press');return ()=>el.classList.remove('motion-soft-press');}
       const live=el.matches('.pm-dot.live');
-      el.classList.add('motion-pressing');spring(el,live?.97:el.id==='orb-main'?.94:.90,false);
+      el.classList.add('motion-pressing');spring(el,live?.94:el.id==='orb-main'?.94:.90,false);
       return (event,{success})=>{
         el.classList.remove('motion-pressing');
         if(el.isConnected){
           spring(el,1,true);
-          if(success&&live){const who=owners.get(el)||el.dataset.person;if(who&&typeof Home!=='undefined'&&Home.openPoint)Home.openPoint(who);}
-          else if(success)wave(el);
+          if(success&&!live)wave(el);
         }
         else{states.get(el)?.stop();states.delete(el);el.style.removeProperty('scale');}
       };
@@ -13340,7 +13367,7 @@ window.ThreadMotion=(()=>{
     if(!window.Motion)return;scan(document.body);
     new MutationObserver(records=>records.forEach(r=>r.addedNodes.forEach(scan))).observe(document.body,{subtree:true,childList:true});
   }
-  boot();return {cascade,bindLive:bind};
+  boot();return {cascade,bindLive(el){bind(el);}};
 })();
 </script>
 </body>

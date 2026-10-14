@@ -4806,7 +4806,7 @@ html:root .fullmap #home-settings{background-image:var(--art-01-settings)}
 html:root .fullmap #layers-trigger{background-image:var(--art-02-map-layers)}
 html:root .fullmap #map-locate>.ico-svg,html:root .fullmap #home-settings>.ico-svg,html:root .fullmap #layers-trigger>.ico-svg{visibility:hidden}
 html:root .fullmap .orb-main{background:var(--art-01-menu) center/contain no-repeat}
-html:root .fullmap .orb-wrap.open .orb-main{background:var(--art-01-menu-open) center/contain no-repeat}
+html:root .fullmap .orb-wrap.open .orb-main{background:var(--art-01-menu) center/contain no-repeat}
 html:root .fullmap .orb-main>svg{visibility:hidden}
 html:root .fullmap .orb-item[data-key="replay"]{background-image:var(--art-01-replay)}
 html:root .fullmap .orb-item[data-key="history"]{background-image:var(--art-01-history)}
@@ -4832,6 +4832,7 @@ html:root .person-edge .edge-arrow svg{visibility:hidden}
 html:root .edge-caption{background:transparent!important}
 html:root .back-lite{background:none;border:0;box-shadow:none;min-width:44px;min-height:44px}
 html:root .back-lite .back-glyph{font-size:0;transform:none;width:13px;height:26px;background:var(--art-07-prev-day) center/contain no-repeat}
+html:root .back-lite .back-glyph{width:30px;height:30px;background-color:#b74868;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3E%3Cpath d='M18.5 6.5 9 15l9.5 8.5' fill='none' stroke='%23fff7ef' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");border-radius:50%;box-shadow:0 3px 8px rgba(96,38,57,.28)}
 html:root .drawer-close,html:root .sheet-refresh,html:root .rp-restart{background:var(--art-03-round) center/contain no-repeat;border:0;box-shadow:none}
 html:root .rp-screen{background-color:var(--bg);background-image:var(--art-09-rose-linen);background-size:auto}
 html:root .rp-map{border:2px dashed var(--line);box-shadow:none}
@@ -4921,7 +4922,7 @@ html:root .fullmap .orb-wrap.open .orb-item[data-key="mate"]{transform:translate
 html:root .fullmap .orb-wrap:not(.open) .orb-item{transition-duration:360ms;transition-delay:0ms}
 html:root .fullmap .orb-wrap.open .orb-main{transform:none}
 html:root .settings-bubbles .set-bubble{animation:setBranchArrive 620ms var(--motion-ease) both}
-@keyframes setBranchArrive{from{opacity:0;transform:translateX(10px) scale(.96)}to{opacity:1;transform:none}}
+@keyframes setBranchArrive{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 html:root .settings-bubbles .set-bubble:nth-child(2){animation-delay:50ms}
 html:root .settings-bubbles .set-bubble:nth-child(1){animation-delay:100ms}
 html:root :is(.btn,.glass-btn,.orb-main,.set-bubble,.back-lite,.drawer-close,.sheet-refresh,.edge-button,.cal-d,.cal-nav,.rp-select button,.rp-controls button,.rs,.switch .sl){transition:scale var(--motion-feedback) var(--motion-ease),translate var(--motion-feedback) var(--motion-ease),opacity 280ms ease-out;transform-origin:center}
@@ -4948,8 +4949,10 @@ html:root .live-wave:nth-child(2){animation-delay:-1.8s}
 html[data-page-hidden="true"] .live-wave{animation-play-state:paused}
 @media(prefers-reduced-motion:reduce){html:root .live-wave{animation:none;opacity:.14;transform:scale(.9)}html:root .home-layers,html:root .modal-card,html:root .position-sheet,html:root .set-pane,html:root .toast,html:root .settings-bubbles .set-bubble{animation:none}html:root :is(.btn,.glass-btn,.orb-main,.set-bubble,.back-lite,.drawer-close,.sheet-refresh,.edge-button,.cal-d,.cal-nav,.rp-select button,.rp-controls button,.rs,.switch .sl,.orb-item,.orb-t,.focus-slide){transition:opacity 120ms ease-out;scale:1;translate:none}}
 
-html:root .fullmap .map-tools{flex-direction:column;gap:10px}
-html:root .fullmap .settings-bubbles{right:calc(100% + 14px);bottom:calc(100% + 16px);gap:12px}
+html:root .fullmap .map-tools{flex-direction:row;gap:12px}
+html:root .fullmap .settings-bubbles{right:0;bottom:calc(100% + 18px);gap:12px}
+@media(max-width:380px){html:root .fullmap .map-tools{bottom:calc(78px + var(--safe-b))}}
+@media(max-height:360px) and (min-width:500px){html:root .fullmap .settings-bubbles{right:58px}}
 html:root .btn-sm{min-height:44px}
 html:root .home-scale.thread-redrawn{background-image:var(--draw-frame),var(--draw-cloth)!important;background-color:var(--draw-color)!important;background-size:auto,auto!important;background-repeat:no-repeat,repeat!important}
 html:root .set-pane{position:relative}
@@ -4958,6 +4961,11 @@ html:root .field input:focus{outline:none;box-shadow:inset 0 0 0 2px var(--accen
 
 html:root :is(button,.prof-item,.hist-row,[role="button"]){transition:scale 320ms var(--motion-ease),translate 320ms var(--motion-ease),opacity 280ms ease-out}
 html:root :is(button,.prof-item,.hist-row,[role="button"]):active{scale:.96}
+html:root [data-press-motion]{transition-property:filter,opacity;transition-duration:220ms;transition-timing-function:ease-out}
+html:root [data-press-motion]:active{scale:1;translate:none}
+html:root .motion-pressing{filter:brightness(1.08) saturate(1.12)}
+html:root .motion-soft-press{opacity:.75}
+.thread-press-wave{position:fixed;border-radius:50%;pointer-events:none;z-index:10010;background:radial-gradient(circle,transparent 30%,rgba(243,222,193,.65) 48%,rgba(175,192,180,.5) 58%,transparent 72%)}
 html:root :is(.orb-main,.glass-btn):active{scale:.94;translate:0 1px}
 html:root input,html:root select{transition:box-shadow 320ms var(--motion-ease),opacity 280ms ease-out}
 html[data-map-visible="false"] .live-wave{animation-play-state:paused}
@@ -4970,13 +4978,21 @@ html:root .kv select{min-height:44px}
 html:root .edge-caption b{color:#49343e;text-shadow:0 1px 2px #fff9f3,0 -1px 2px #fff9f3}
 html:root .card:not(.map-card):not(.rp-map){position:relative}
 html:root .card:not(.map-card):not(.rp-map)::after{content:'';position:absolute;left:50%;top:7px;translate:-50% 0;width:28px;height:18px;background:var(--art-10-bow-pink) center/contain no-repeat;pointer-events:none}
+html:root .fullmap .orb-main,html:root .fullmap .orb-wrap.open .orb-main{background-image:var(--art-03-round)}
+html:root .fullmap .orb-main>svg{visibility:visible;color:#6d3652}
+html:root[data-theme="dark"] .fullmap .orb-main>svg{color:#fff1e5}
+html:root .orb-wrap .orb-svg path,html:root .orb-wrap.open .orb-svg path{transform:none!important;opacity:1!important;transition:none;stroke-width:2.3}
+html:root[data-theme="dark"] :is(.field input,.field select,.rp-select input,.rp-select select,.kv select){color:var(--text)}
+html:root :is(.btn-danger,.rp-select button.on,.rp-speed .rs.on){color:var(--text)}
+html:root :is(.prof-item,.hist-row,.set-cat,.set-link,.cal-d,.cal-nav,.hl-track,.map-layer-seg button,.set-crumb,.chip,.badge,.tag){background-color:transparent!important;background-image:none!important}
+@media(prefers-reduced-motion:reduce){.thread-press-wave{display:none}html:root [data-press-motion]:active{scale:1;translate:none}}
 
 </style>
 
 <!-- 云端数据库配置（公开的 anon key，表已锁死，读写只走 SECURITY DEFINER 函数） -->
 <script>window.SiteDB={config:{url:"https://zloaudskrsdlisgwyfvt.supabase.co",key:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpsb2F1ZHNrcnNkbGlzZ3d5ZnZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3NTExMjIsImV4cCI6MjEwMzMyNzEyMn0.4TWnLMChq7C00NGK1DRAfYdyPb5udhqkj679nMCA8A4"}};</script>
 <!-- 构建信息：版本号 / 构建号 / 构建时间（自动更新与「关于」页读取） -->
-<script>window.PM_BUILD={"name": "同屏 Ping", "version": "3.8.12", "build": "2026101402", "notes": "修复定位与设置分支重叠；页面在最终布局中平滑切入，消除末帧偏移。"};window.PM_CLOUD_GATEWAY={"url": "", "project": "zloaudskrsdlisgwyfvt"};</script>
+<script>window.PM_BUILD={"name": "同屏 Ping", "version": "3.8.13", "build": "2026101405", "notes": "固定菜单图标；定位与设置同排；文字控件透明底图；增强按压和界面动效。"};window.PM_CLOUD_GATEWAY={"url": "", "project": "zloaudskrsdlisgwyfvt"};</script>
 <link rel="stylesheet" href="vendor/leaflet.css">
 
 
@@ -4997,6 +5013,7 @@ html:root .card:not(.map-card):not(.rp-map)::after{content:'';position:absolute;
 })();
 </script>
 <script src="vendor/leaflet.js"></script>
+<script src="vendor/motion.js"></script>
 
 <!-- ============ 断网拦截层（在线优先：连不上后端时全屏拦截） ============ -->
 <div id="net-gate" class="net-gate" hidden>
@@ -10214,7 +10231,7 @@ const Home = {
     if(!this._built || !document.getElementById('map-home')) this.render();
     const m=MapX.ensure('home','map-home');
     if(m) m.invalidateSize({animate:false,pan:true});
-    this.draw(); this.loadLive(); this.loadTrack();
+    this.draw(); this.drawTrack(); this.loadLive(); this.loadTrack();
     clearInterval(this.timer);
     this.timer=setInterval(() => {
       if(AppUI.page!=='home' || document.hidden) return;
@@ -10257,24 +10274,34 @@ const Home = {
     }
   },
   async loadTrack(){
-    if(this._trackBusy) return;
+    if(this._trackBusy){this._trackQueued=true;return;}
     this._trackBusy=true; const epoch=this._epoch;
+    const day=dayKey(Date.now());
+    const cached=TrackData._cache['me@'+day];
+    if(this._trackDay!==day){this.trackAnalysis=null;this.track=[];this._trackDay=day;}
+    if(cached?.pts?.length){this.trackAnalysis=analyzeTrack(cached.pts);this.track=this.trackAnalysis.points;this.drawTrack();}
     try{
-      const d=new Date(); d.setHours(0,0,0,0);
-      const res=await Ping.points('me',d.getTime(),d.getTime()+864e5,20000);
+      const range=TrackData.range(day);
+      const res=await Ping.points('me',range.from,range.to,20000);
       if(epoch!==this._epoch) return;
       this.trackAnalysis=analyzeTrack(res.list || []);this.track=this.trackAnalysis.points;
+      TrackData._cache['me@'+day]={pts:res.list||[],at:Date.now()};
       this.drawTrack();
     }catch(e){ /* Keep the last successful route through temporary outages. */ }
-    finally{ this._trackBusy=false; }
+    finally{
+      this._trackBusy=false;
+      if(this._trackQueued){this._trackQueued=false;if(AppUI.page==='home')this.loadTrack();}
+    }
   },
   drawTrack(){
-    if(!MapX.maps.home) return;
-    const pts=this._trackVisible ? (this.track || []) : [];
-    const signature=pts.length+'|'+pts.slice(-1).map(p=>p.lat+','+p.lng).join();
-    if(this._trackSignature===signature) return;
-    this._trackSignature=signature;
-    MapX.lineRuns('home',this._trackVisible&&this.trackAnalysis?this.trackAnalysis.paths:[],mapColor('line'));
+    const map=MapX.maps.home;if(!map)return;
+    const analysis=this._trackVisible?this.trackAnalysis:null;
+    const paths=analysis?.paths||[],line=MapX.lines.home,color=mapColor('line');
+    const present=!!line&&map.hasLayer(line);
+    if(this._trackDrawn===analysis&&this._trackColor===color&&(paths.length?present:!present))return;
+    MapX.lineRuns('home',paths,color);
+    this._trackDrawn=analysis;this._trackColor=color;
+    const button=document.querySelector('.hl-track');if(button)button.setAttribute('aria-pressed',String(this._trackVisible));
   },
   draw(){
     if(AppUI.page!=='home') return;
@@ -10425,9 +10452,12 @@ const Home = {
     panel.hidden=!on; button.setAttribute('aria-expanded',String(on));
   },
   toggleTrack(){
-    this._trackVisible=!this._trackVisible;
+    const map=MapX.maps.home,line=MapX.lines.home;
+    const routePresent=!!map&&!!line&&map.hasLayer(line);
+    this._trackVisible=!this._trackVisible||!routePresent;
     const b=document.querySelector('.hl-track'); if(b) b.setAttribute('aria-pressed',String(this._trackVisible));
     this.drawTrack();
+    if(this._trackVisible)this.loadTrack();
   },
   paintRefresh(){
     const b=document.getElementById('sheet-refresh');
@@ -12031,7 +12061,8 @@ const AppUI = {
     };
     const children=layers(target).map(el=>move(el,distance,620,true));
     const exits=layers(prev).map(el=>move(el,-distance/2,460,false));
-    const animations=[...children,...exits];
+    const details=window.ThreadMotion?.cascade(target,layers(target))||[];
+    const animations=[...children,...exits,...details];
     const tr={prev,target,animation:children[0],children,exit:exits[0],animations,axis};this._transition=tr;
     // Group completion follows Motion's MIT GroupAnimation; preserve final geometry.
     Promise.all(animations.map(a=>a.finished)).then(()=>{if(this._transition===tr)this.finishTransition();},()=>{});
@@ -13213,11 +13244,9 @@ const ThreadFrames=(()=>{
     const key=[w,h,dark,kind,shape,primary,el.disabled,el.tagName].join('/');if(signatures.get(el)===key)return;
     signatures.set(el,key);
     const svg=artwork(w,h,kind,dark,primary,el.tagName==='SELECT',shape);
-    const color=input?'#f6efe3':primary?(dark?'#87576b':'#e6b8c5'):dark?'#333e5a':'#f6efe3';
-    const cloth=input?'cream-linen':primary?'rose-linen':dark?'blue-linen':'cream-linen';
     el.style.setProperty('--draw-frame','url("data:image/svg+xml,'+encodeURIComponent(svg).replace(/\(/g,'%28').replace(/\)/g,'%29')+'")');
-    el.style.setProperty('--draw-cloth','var(--art-09-'+cloth+')');
-    el.style.setProperty('--draw-color',color);
+    el.style.setProperty('--draw-cloth','none');
+    el.style.setProperty('--draw-color','transparent');
     // Legacy checked/hover rules must not replace the freshly drawn frame.
     el.style.setProperty('background-image','var(--draw-frame),var(--draw-cloth)','important');
     const mask=`<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}"><path d="${contour(w,h,shape,2)}" fill="white"/></svg>`;
@@ -13250,6 +13279,52 @@ const ThreadFrames=(()=>{
 })();
 if(typeof document!=='undefined')ThreadFrames.boot();
 if(typeof module!=='undefined'&&module.exports)module.exports=ThreadFrames;
+/* Motion 14.2.0 (MIT): press, native springs and stagger. */
+window.ThreadMotion=(()=>{
+  const selector='button,[role="button"],.prof-item[onclick],.hist-row[onclick]',bound=new WeakSet(),states=new WeakMap();
+  const reduced=()=>matchMedia('(prefers-reduced-motion:reduce)').matches;
+  function spring(el,to,release){
+    const old=states.get(el),from=parseFloat(getComputedStyle(el).scale)||1;
+    old?.stop();
+    const a=Motion.animateMini(el,{scale:[from,to]},{type:Motion.spring,stiffness:release?320:540,damping:release?18:32,mass:1});
+    states.set(el,a);
+    a.finished.then(()=>{if(states.get(el)===a){el.style.removeProperty('scale');states.delete(el);a.cancel();}});
+  }
+  function wave(el){
+    const r=el.getBoundingClientRect(),size=Math.min(120,Math.max(54,r.height*1.6)),w=document.createElement('i');
+    w.className='thread-press-wave';w.setAttribute('aria-hidden','true');
+    Object.assign(w.style,{width:size+'px',height:size+'px',left:r.left+r.width/2-size/2+'px',top:r.top+r.height/2-size/2+'px'});
+    document.body.append(w);
+    const a=Motion.animateMini(w,{scale:[.45,1.5],opacity:[.5,0]},{duration:.66,ease:[.16,1,.3,1]});
+    a.finished.then(()=>w.remove());
+  }
+  function bind(el){
+    if(bound.has(el))return;bound.add(el);el.dataset.pressMotion='spring';
+    Motion.press(el,()=>{
+      if(el.disabled||el.getAttribute('aria-disabled')==='true'||el.closest('[inert]'))return;
+      if(reduced()){el.classList.add('motion-soft-press');return ()=>el.classList.remove('motion-soft-press');}
+      el.classList.add('motion-pressing');spring(el,el.id==='orb-main'?.94:.90,false);
+      return (event,{success})=>{
+        el.classList.remove('motion-pressing');
+        if(el.isConnected){spring(el,1,true);if(success)wave(el);}
+        else{states.get(el)?.stop();states.delete(el);el.style.removeProperty('scale');}
+      };
+    });
+  }
+  function scan(node){if(node.nodeType!==1)return;if(node.matches(selector))bind(node);node.querySelectorAll(selector).forEach(bind);}
+  function cascade(page,layers=[]){
+    if(reduced()||page.id==='page-home')return [];
+    const nodes=[...page.querySelectorAll('.card,.prof-item,.set-pane:not([hidden]),.hist-row,.rp-controls,.rp-select')]
+      .filter(el=>!layers.includes(el)&&el.offsetWidth&&el.offsetHeight).slice(0,8);
+    const delay=Motion.stagger(.018,{startDelay:.015});
+    return nodes.map((el,i)=>el.animate([{opacity:.25,translate:'0 12px'},{opacity:1,translate:'0 0'}],{duration:470,delay:delay(i,nodes.length)*1000,easing:'cubic-bezier(.16,1,.3,1)',fill:'both'}));
+  }
+  function boot(){
+    if(!window.Motion)return;scan(document.body);
+    new MutationObserver(records=>records.forEach(r=>r.addedNodes.forEach(scan))).observe(document.body,{subtree:true,childList:true});
+  }
+  boot();return {cascade};
+})();
 </script>
 </body>
 </html>

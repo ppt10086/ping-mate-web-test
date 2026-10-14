@@ -2873,19 +2873,20 @@ html.map-fs-lock #view-main .main > section{
    收小一档并贴着地图上沿（与左上角的全屏按钮同一竖列），别把地图中间的街道名压住。 */
 .map-layer-seg{
   position:absolute; left:10px; top:46px; z-index:500; display:inline-flex; gap:2px; padding:2px;
-  border-radius:9px;
-  background:color-mix(in srgb, var(--panel) 84%, transparent);
+  border-radius:12px; overflow:hidden;
+  background-color:var(--panel); background-image:var(--art-09-cream-linen); background-size:auto; background-repeat:repeat;
   -webkit-backdrop-filter:blur(14px) saturate(160%); backdrop-filter:blur(14px) saturate(160%);
   border:1px solid var(--line2); box-shadow:inset 0 1px 0 rgba(255,255,255,.5), 0 2px 10px rgba(0,0,0,.08);
 }
+[data-theme="dark"] .map-layer-seg{background-image:var(--art-09-blue-linen);background-blend-mode:multiply}
 .map-layer-seg .mls-btn{
   appearance:none; cursor:pointer; font:inherit; font-size:10.5px; font-weight:650;
   display:inline-flex; align-items:center; gap:3px; padding:3px 7px; border:0; border-radius:7px;
   color:var(--muted); background:transparent;
-  transition:background .16s ease, color .16s ease;
+  transition:color .16s ease;
 }
 .map-layer-seg .mls-btn .ico-svg{ width:12px; height:12px }
-.map-layer-seg .mls-btn.on{ background:var(--panel); color:var(--text); box-shadow:0 1px 3px rgba(0,0,0,.1) }
+.map-layer-seg .mls-btn.on{ background:transparent; color:var(--text); box-shadow:none }
 .map-card.map-fs .map-layer-seg{ top:calc(46px + env(safe-area-inset-top, 0px)) }
 
 /* ---- 向下翻阅提示：贴着屏幕底部正中，一枚「>」顺时针转 90° 变成向下的箭头 ---- */
@@ -4812,7 +4813,7 @@ html:root .fullmap .orb-item[data-key="replay"]{background-image:var(--art-01-re
 html:root .fullmap .orb-item[data-key="history"]{background-image:var(--art-01-history)}
 html:root .fullmap .orb-item[data-key="mate"]{background-image:var(--art-01-mate)}
 html:root .fullmap .orb-item>.ico{visibility:hidden}
-html:root .fullmap .orb-t{background:var(--art-03-small) center/contain no-repeat;border:0;padding:6px 12px;color:var(--map-ink);box-shadow:none}
+html:root .fullmap .orb-t{background:var(--art-03-small) center/contain no-repeat;border:0;min-width:112px;min-height:36px;max-width:min(230px,calc(100vw - 112px));padding:8px 16px;display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;color:var(--map-ink);box-shadow:none}
 html:root .settings-bubbles .set-bubble:nth-child(1){background-image:var(--art-01-storage)}
 html:root .settings-bubbles .set-bubble:nth-child(2){background-image:var(--art-01-account)}
 html:root .settings-bubbles .set-bubble:nth-child(3){background-image:var(--art-01-appearance)}
@@ -4976,6 +4977,8 @@ html:root .fullmap .glass-btn:active{transform:none}
 html:root .kv select{min-height:44px}
 
 html:root .edge-caption b{color:#49343e;text-shadow:0 1px 2px #fff9f3,0 -1px 2px #fff9f3}
+html:root .map-layer-seg .mls-btn,html:root .map-layer-seg .mls-btn.on{background-color:transparent!important;background-image:none!important;box-shadow:none!important}
+html:root body:has(#page-home:not([hidden])) #toast-wrap .toast>div,html:root #fullmap-home .edge-caption b,html:root #fullmap-home .edge-caption small{color:#fff;text-shadow:none;mix-blend-mode:difference}
 html:root .card:not(.map-card):not(.rp-map){position:relative}
 html:root .card:not(.map-card):not(.rp-map)::after{content:'';position:absolute;left:50%;top:7px;translate:-50% 0;width:28px;height:18px;background:var(--art-10-bow-pink) center/contain no-repeat;pointer-events:none}
 html:root .fullmap .orb-main,html:root .fullmap .orb-wrap.open .orb-main{background-image:var(--art-03-round)}
@@ -4992,7 +4995,7 @@ html:root :is(.prof-item,.hist-row,.set-cat,.set-link,.cal-d,.cal-nav,.hl-track,
 <!-- 云端数据库配置（公开的 anon key，表已锁死，读写只走 SECURITY DEFINER 函数） -->
 <script>window.SiteDB={config:{url:"https://zloaudskrsdlisgwyfvt.supabase.co",key:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpsb2F1ZHNrcnNkbGlzZ3d5ZnZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3NTExMjIsImV4cCI6MjEwMzMyNzEyMn0.4TWnLMChq7C00NGK1DRAfYdyPb5udhqkj679nMCA8A4"}};</script>
 <!-- 构建信息：版本号 / 构建号 / 构建时间（自动更新与「关于」页读取） -->
-<script>window.PM_BUILD={"name": "同屏 Ping", "version": "3.8.13", "build": "2026101405", "notes": "固定菜单图标；定位与设置同排；文字控件透明底图；增强按压和界面动效。"};window.PM_CLOUD_GATEWAY={"url": "", "project": "zloaudskrsdlisgwyfvt"};</script>
+<script>window.PM_BUILD={"name": "同屏 Ping", "version": "3.8.14", "build": "2026101406", "notes": "地图控件针织底图与自适应文字；修复实时点点击并改为轻弹回馈。"};window.PM_CLOUD_GATEWAY={"url": "", "project": "zloaudskrsdlisgwyfvt"};</script>
 <link rel="stylesheet" href="vendor/leaflet.css">
 
 
@@ -10314,7 +10317,8 @@ const Home = {
       MapX.move('home',who,Number(p.lat),Number(p.lng),signalColor(lv),this.name(who).slice(0,4),true,900,'live',MapX.Z_LIVE);
       this.paintMarkerAvatar(who,p);
       const mk=MapX.markers.home[who];
-      if(mk && !mk._pmPick){ mk._pmPick=true; mk.on('click',()=>this.overview(who)); }
+      if(mk && !mk._pmPick){ mk._pmPick=true; mk.on('click',()=>this.openPoint(who)); }
+      if(mk){const el=mk.getElement(),dot=el&&el.querySelector('.pm-dot.live');if(dot)ThreadMotion?.bindLive(dot,who);}
       const acc=Number(p.acc);
       if(acc>0 && acc<=120){
         MapX.circle('home','acc-'+who,p.lat,p.lng,acc,{color:signalColor(lv),weight:1,opacity:.25,fillOpacity:.055});
@@ -10388,6 +10392,11 @@ const Home = {
   },
   overview(who){
     this._selected=who;this.layers(false);Orb.close();this.refresh();this.expand(true);
+  },
+  openPoint(who){
+    if(!['me','pa'].includes(who))return;
+    const now=Date.now();if(this._lastPointOpen===who&&now-(this._lastPointOpenAt||0)<450)return;
+    this._lastPointOpen=who;this._lastPointOpenAt=now;this.overview(who);
   },
   expand(force){
     this._expanded=force==null?!this._expanded:!!force;
@@ -13245,8 +13254,9 @@ const ThreadFrames=(()=>{
     signatures.set(el,key);
     const svg=artwork(w,h,kind,dark,primary,el.tagName==='SELECT',shape);
     el.style.setProperty('--draw-frame','url("data:image/svg+xml,'+encodeURIComponent(svg).replace(/\(/g,'%28').replace(/\)/g,'%29')+'")');
-    el.style.setProperty('--draw-cloth','none');
-    el.style.setProperty('--draw-color','transparent');
+    const mapSurface=el.matches('.home-layers,.map-focus,.orb-t');
+    el.style.setProperty('--draw-cloth',mapSurface?(dark?'var(--art-09-blue-linen)':'var(--art-09-cream-linen)'):'none');
+    el.style.setProperty('--draw-color',mapSurface?'var(--map-surface)':'transparent');
     // Legacy checked/hover rules must not replace the freshly drawn frame.
     el.style.setProperty('background-image','var(--draw-frame),var(--draw-cloth)','important');
     const mask=`<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}"><path d="${contour(w,h,shape,2)}" fill="white"/></svg>`;
@@ -13281,12 +13291,13 @@ if(typeof document!=='undefined')ThreadFrames.boot();
 if(typeof module!=='undefined'&&module.exports)module.exports=ThreadFrames;
 /* Motion 14.2.0 (MIT): press, native springs and stagger. */
 window.ThreadMotion=(()=>{
-  const selector='button,[role="button"],.prof-item[onclick],.hist-row[onclick]',bound=new WeakSet(),states=new WeakMap();
+  const selector='button,[role="button"],.prof-item[onclick],.hist-row[onclick],.pm-dot.live',bound=new WeakSet(),states=new WeakMap(),owners=new WeakMap();
   const reduced=()=>matchMedia('(prefers-reduced-motion:reduce)').matches;
   function spring(el,to,release){
     const old=states.get(el),from=parseFloat(getComputedStyle(el).scale)||1;
     old?.stop();
-    const a=Motion.animateMini(el,{scale:[from,to]},{type:Motion.spring,stiffness:release?320:540,damping:release?18:32,mass:1});
+    const live=el.matches('.pm-dot.live');
+    const a=Motion.animateMini(el,{scale:[from,to]},{type:Motion.spring,stiffness:release?(live?430:320):540,damping:release?(live?15:18):32,mass:1});
     states.set(el,a);
     a.finished.then(()=>{if(states.get(el)===a){el.style.removeProperty('scale');states.delete(el);a.cancel();}});
   }
@@ -13298,15 +13309,21 @@ window.ThreadMotion=(()=>{
     const a=Motion.animateMini(w,{scale:[.45,1.5],opacity:[.5,0]},{duration:.66,ease:[.16,1,.3,1]});
     a.finished.then(()=>w.remove());
   }
-  function bind(el){
+  function bind(el,who){
+    if(who)owners.set(el,who);
     if(bound.has(el))return;bound.add(el);el.dataset.pressMotion='spring';
     Motion.press(el,()=>{
       if(el.disabled||el.getAttribute('aria-disabled')==='true'||el.closest('[inert]'))return;
       if(reduced()){el.classList.add('motion-soft-press');return ()=>el.classList.remove('motion-soft-press');}
-      el.classList.add('motion-pressing');spring(el,el.id==='orb-main'?.94:.90,false);
+      const live=el.matches('.pm-dot.live');
+      el.classList.add('motion-pressing');spring(el,live?.97:el.id==='orb-main'?.94:.90,false);
       return (event,{success})=>{
         el.classList.remove('motion-pressing');
-        if(el.isConnected){spring(el,1,true);if(success)wave(el);}
+        if(el.isConnected){
+          spring(el,1,true);
+          if(success&&live){const who=owners.get(el)||el.dataset.person;if(who&&typeof Home!=='undefined'&&Home.openPoint)Home.openPoint(who);}
+          else if(success)wave(el);
+        }
         else{states.get(el)?.stop();states.delete(el);el.style.removeProperty('scale');}
       };
     });
@@ -13323,7 +13340,7 @@ window.ThreadMotion=(()=>{
     if(!window.Motion)return;scan(document.body);
     new MutationObserver(records=>records.forEach(r=>r.addedNodes.forEach(scan))).observe(document.body,{subtree:true,childList:true});
   }
-  boot();return {cascade};
+  boot();return {cascade,bindLive:bind};
 })();
 </script>
 </body>

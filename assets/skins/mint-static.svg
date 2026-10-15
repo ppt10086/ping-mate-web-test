@@ -1,18 +1,19 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="240" height="76" viewBox="0 0 240 76" role="img" aria-label="薄荷叶语静态路线" class="skin-preview "><style>
-.thread-trail-flow{animation:threadTrailFlow 3.6s linear infinite;pointer-events:none}
-.thread-trail-flow[data-trail-skin="sea"]{animation-duration:5s}
-.thread-trail-flow[data-trail-skin="mint"]{animation-duration:4.8s}
-.thread-trail-flow[data-trail-skin="star"]{animation-duration:6s}
-.thread-trail-flow[data-trail-skin="cloud"]{animation:threadTrailFlow 7s linear infinite,threadTrailBreathe 4s ease-in-out infinite}
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="76" viewBox="0 0 240 76" role="img" aria-label="薄荷叶语静态路线" data-trail-skin="mint" class="skin-preview "><style>.skin-preview:not(.is-moving) .trail-glyph{animation:none}
+.thread-trail-flow,.skin-preview{--flow-start:30;--flow-distance:180;--flow-duration:3.6s}
+[data-trail-skin="sea"]{--flow-start:23.04;--flow-distance:192;--flow-duration:5s}
+[data-trail-skin="mint"]{--flow-start:24;--flow-distance:192;--flow-duration:4.8s}
+[data-trail-skin="star"]{--flow-start:18.6;--flow-distance:186;--flow-duration:6s}
+[data-trail-skin="cloud"]{--flow-start:15.428571;--flow-distance:180;--flow-duration:7s}
+.thread-trail-flow,.is-moving .preview-flow{animation:threadTrailStart 1.2s cubic-bezier(.333333,0,.666667,.333333) both,threadTrailFlow var(--flow-duration) linear 1.2s infinite;pointer-events:none}
 .trail-glyph-sea{animation:threadBubbleLift 3.8s ease-in-out infinite}
 .trail-glyph-mint{animation:threadLeafSway 4.4s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
 .trail-glyph-star{animation:threadStarGlimmer 3.6s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
 .trail-glyph-cloud{animation:threadCloudBreathe 4.8s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
 .trail-glyph-rose{animation:threadTrailBreathe 3.8s ease-in-out infinite}
-.is-moving .preview-flow{animation:threadTrailFlow 4.8s linear infinite}
 .preview-traveler{animation:threadPreviewTravel 5s linear infinite;offset-rotate:0deg}
 @keyframes threadPreviewTravel{to{offset-distance:100%}}
-@keyframes threadTrailFlow{to{stroke-dashoffset:-180}}
+@keyframes threadTrailFlow{from{stroke-dashoffset:calc(-1 * var(--flow-start))}to{stroke-dashoffset:calc(-1 * (var(--flow-start) + var(--flow-distance)))}}
+@keyframes threadTrailStart{from{stroke-dashoffset:0}to{stroke-dashoffset:calc(-1 * var(--flow-start))}}
 @keyframes threadTrailBreathe{0%,100%{opacity:.45}50%{opacity:.95}}
 @keyframes threadBubbleLift{0%,100%{opacity:.3;transform:translateY(3px)}50%{opacity:.95;transform:translateY(-7px)}}
 @keyframes threadLeafSway{0%,100%{transform:rotate(-13deg)}50%{transform:rotate(15deg)}}
@@ -21,5 +22,17 @@
 html[data-page-hidden="true"] :is(.thread-trail-flow,.trail-glyph,.preview-flow,.preview-traveler),html[data-map-visible="false"] .leaflet-overlay-pane :is(.thread-trail-flow,.trail-glyph){animation-play-state:paused}
 #page-settings[hidden] .skin-preview *{animation-play-state:paused}
 @media(prefers-reduced-motion:reduce){.thread-trail-flow,.trail-glyph,.is-moving .preview-flow{animation:none!important}.preview-traveler{display:none}}
-@media(min-width:700px){.skin-choices{grid-template-columns:repeat(2,minmax(0,1fr))}.frame-choices{grid-template-columns:repeat(5,minmax(0,1fr))}}
+@media(min-width:700px){.frame-choices{grid-template-columns:repeat(5,minmax(0,1fr))}}
+@media(max-width:520px){.skin-picker{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+html:root .fullmap .pm-dot.live{background:transparent!important;border-color:transparent!important;box-shadow:none!important}
+html:root .fullmap .pm-dot.live::before{content:none!important}
+html:root .live-cotton{position:absolute;inset:-2.5px;display:block;border:2.5px solid var(--map-surface,#fff8ef);border-radius:50%;background:var(--c);transform-origin:center;pointer-events:none;z-index:2}
+html:root .has-avatar .live-cotton{background:transparent}
+html:root .live-cotton::before{content:'';position:absolute;width:56px;height:56px;left:50%;top:50%;translate:-50% -50%;background:var(--avatar-skin-image,var(--art-06-me-ring)) center/contain no-repeat;z-index:3;pointer-events:none}
+html:root .pm-dot[data-person="pa"] .live-cotton::before{background-image:var(--avatar-skin-image,var(--art-06-partner-ring))}
+html:root[data-avatar-frame="sea"]{--avatar-skin-image:url('assets/skins/frame-sea.svg')}
+html:root[data-avatar-frame="mint"]{--avatar-skin-image:url('assets/skins/frame-mint.svg')}
+html:root[data-avatar-frame="star"]{--avatar-skin-image:url('assets/skins/frame-star.svg')}
+html:root[data-avatar-frame="cloud"]{--avatar-skin-image:url('assets/skins/frame-cloud.svg')}
 </style><defs><pattern id="preview-weave-mint-still" width="4" height="4" patternUnits="userSpaceOnUse"><path d="M0 1h4M1 0v4" fill="none" stroke="#fff7eb" stroke-width=".6" opacity=".45"/></pattern></defs><path d="M14 50C50 50 40 24 84 29S128 57 155 34S200 21 226 24" fill="none" stroke="#789776" stroke-width="30" stroke-linecap="round"/><path d="M14 50C50 50 40 24 84 29S128 57 155 34S200 21 226 24" fill="none" stroke="url(#preview-weave-mint-still)" stroke-width="30" stroke-linecap="round"/><path class="preview-flow" d="M14 50C50 50 40 24 84 29S128 57 155 34S200 21 226 24" fill="none" stroke="#edf4d6" stroke-width="2.5" stroke-dasharray="9 23" stroke-linecap="round"/><g transform="translate(52 35)"><g class="trail-glyph trail-glyph-mint" style="animation-delay:-0.37s"><path d="M-6 3Q-5-7 6-4Q7 6-6 3Z" fill="#dce8bd" stroke="#55785d" stroke-width="1"/><path d="m-5 3 9-6" stroke="#55785d"/></g></g><g transform="translate(113 42)"><g class="trail-glyph trail-glyph-mint" style="animation-delay:-0.74s"><path d="M-6 3Q-5-7 6-4Q7 6-6 3Z" fill="#dce8bd" stroke="#55785d" stroke-width="1"/><path d="m-5 3 9-6" stroke="#55785d"/></g></g><g transform="translate(183 23)"><g class="trail-glyph trail-glyph-mint" style="animation-delay:-1.1099999999999999s"><path d="M-6 3Q-5-7 6-4Q7 6-6 3Z" fill="#dce8bd" stroke="#55785d" stroke-width="1"/><path d="m-5 3 9-6" stroke="#55785d"/></g></g></svg>

@@ -4440,7 +4440,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 #page-settings,#page-profile{position:fixed;inset:0;overflow:auto;box-sizing:border-box;padding:calc(env(safe-area-inset-top,0px) + 4px) 16px calc(env(safe-area-inset-bottom,0px) + 16px);background:var(--bg)}
 #page-settings>.topbar,#page-profile>.topbar{margin:0 0 8px;min-height:44px;align-items:center}
 #page-settings>.topbar h1,#page-profile>.topbar h1{display:none}
-#main-area>section:not(#page-home)>.topbar{position:sticky;top:0;z-index:80;padding-top:max(4px,env(safe-area-inset-top,0px));background:var(--bg)}
+#main-area>section:not(#page-home)>.topbar{position:sticky;top:0;z-index:80;padding-top:max(4px,env(safe-area-inset-top,0px));background:transparent}
 #page-settings .set-views,#page-settings .set-panes{margin-top:0;padding-top:0}
 .fullmap .home-scale{z-index:1100;transition:border-color .16s,box-shadow .16s}
 .fullmap .home-scale.dragging{transition:none}
@@ -4829,7 +4829,7 @@ html:root .map-focus .focus-slide{background:var(--art-04-segment-on) center/con
 html:root .home-layers{padding:12px}
 html:root .position-sheet{padding:18px 12px}
 html:root .person-edge .edge-button{background:var(--art-06-edge-button) center/contain no-repeat;border:0;box-shadow:none;backdrop-filter:none}
-html:root .person-edge .edge-arrow{background:var(--art-06-edge-arrow) center/contain no-repeat;scale:-1 1}
+html:root .person-edge .edge-arrow{background:var(--art-06-edge-arrow) center/contain no-repeat;scale:none;rotate:180deg}
 html:root .person-edge .edge-arrow svg{visibility:hidden}
 html:root .edge-caption{background:transparent!important}
 html:root .back-lite{background:none;border:0;box-shadow:none;min-width:44px;min-height:44px}
@@ -5019,8 +5019,8 @@ html:root #page-settings :is(.legal-note,.muted,.skin-effect){font-size:15px!imp
 html:root #page-settings .set-pane{padding:22px 12px 18px}
 html:root #page-settings .kv select{width:136px!important;max-width:100%;padding:10px 26px 10px 12px}
 .skin-choices{display:grid;gap:16px;min-width:0}
-.selected-skin-preview{display:flex;flex-direction:column;align-items:center;gap:5px;padding:10px 8px;border:1px dashed var(--line);border-radius:18px;background:var(--panel);overflow:hidden}
-.selected-skin-preview svg{display:block;width:min(100%,360px);height:auto}.selected-skin-preview b{font-size:16px}
+.selected-skin-preview{display:flex;flex-direction:column;align-items:center;gap:5px;padding:10px 8px;border:1px dashed var(--line);border-radius:18px;background:var(--panel);overflow:hidden;transform:translateZ(0);contain:layout paint}
+.selected-skin-preview :is(svg,img){display:block;width:min(100%,360px);height:auto}.selected-skin-preview b{font-size:16px}
 .skin-picker{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
 .skin-option{position:relative;display:block;width:100%;min-width:0;padding:14px 12px;border:1px dashed var(--line);border-radius:18px;background:transparent;color:var(--text);font:inherit;text-align:left;cursor:pointer}
 .skin-picker .skin-option{padding:7px 4px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:12px;font-weight:700}
@@ -5038,7 +5038,7 @@ html:root #page-settings .kv select{width:136px!important;max-width:100%;padding
 .frame-choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .frame-option{min-width:0;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:112px;padding:12px 5px;border:1px dashed var(--line);border-radius:16px;background:transparent;color:var(--text);font:inherit;font-size:14px;font-weight:700;cursor:pointer}
 .frame-option>.skin-check{position:absolute;right:8px;top:8px}
-.avatar-frame-sample{position:relative;display:grid;place-items:center;width:56px;height:56px;background:center/auto no-repeat var(--frame-image,var(--art-06-me-ring))}
+.avatar-frame-sample{position:relative;display:grid;place-items:center;width:56px;height:56px;background:center/contain no-repeat var(--frame-image,var(--art-06-me-ring))}
 .avatar-frame-sample>i{width:35px;height:35px;border-radius:50%;background:#eac2ba;z-index:0}
 html:root .fullmap .pm-dot.live::before,html:root .fullmap .pm-dot.live.has-avatar::before{width:56px;height:56px;inset:auto;left:50%;top:50%;translate:-50% -50%;transform:none;margin:0;background-size:contain}
 html:root .fullmap .pm-dot.live .pm-live-avatar{width:100%;height:100%;object-fit:cover;object-position:center}
@@ -5057,7 +5057,7 @@ html:root[data-avatar-frame="cloud"] .fullmap .pm-dot.live::before,.avatar-frame
 .trail-glyph-star{animation:threadStarGlimmer 3.6s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
 .trail-glyph-cloud{animation:threadCloudBreathe 4.8s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
 .trail-glyph-rose{animation:threadTrailBreathe 3.8s ease-in-out infinite}
-.preview-traveler{animation:threadPreviewTravel 5s linear infinite;offset-rotate:0deg}
+.preview-traveler{pointer-events:none}
 @keyframes threadPreviewTravel{to{offset-distance:100%}}
 @keyframes threadTrailFlow{from{stroke-dashoffset:calc(-1 * var(--flow-start))}to{stroke-dashoffset:calc(-1 * (var(--flow-start) + var(--flow-distance)))}}
 @keyframes threadTrailStart{from{stroke-dashoffset:0}to{stroke-dashoffset:calc(-1 * var(--flow-start))}}
@@ -5088,7 +5088,7 @@ html:root[data-avatar-frame="cloud"]{--avatar-skin-image:url('assets/skins/frame
 <!-- 云端数据库配置（公开的 anon key，表已锁死，读写只走 SECURITY DEFINER 函数） -->
 <script>window.SiteDB={config:{url:"https://zloaudskrsdlisgwyfvt.supabase.co",key:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpsb2F1ZHNrcnNkbGlzZ3d5ZnZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3NTExMjIsImV4cCI6MjEwMzMyNzEyMn0.4TWnLMChq7C00NGK1DRAfYdyPb5udhqkj679nMCA8A4"}};</script>
 <!-- 构建信息：版本号 / 构建号 / 构建时间（自动更新与「关于」页读取） -->
-<script>window.PM_BUILD={"version": "3.8.19", "build": "2026101503", "notes": "优化皮肤预览、头像按压、地图极端缩放与远距离定位"};window.PM_CLOUD_GATEWAY={"url": "", "project": "zloaudskrsdlisgwyfvt"};</script>
+<script>window.PM_BUILD={"version": "3.8.20", "build": "2026101504", "notes": "修复地图缩小空白、方向指针与头像框，轨迹动态预览独立渲染"};window.PM_CLOUD_GATEWAY={"url": "", "project": "zloaudskrsdlisgwyfvt"};</script>
 <link rel="stylesheet" href="vendor/leaflet.css">
 
 
@@ -7262,7 +7262,7 @@ const MapMotion = {
   install(m,key){
     const el=m.getContainer();
     m.options.bounceAtZoomLimits=false;
-    const limits=()=>{m.options.minZoom=Math.max(3,Math.ceil(Math.log2((m.getSize().y+4)/256)));m.options.maxZoom=19;};
+    const limits=()=>{m.options.minZoom=Math.max(MapX.LOCAL_MAX+1,Math.ceil(Math.log2((m.getSize().y+4)/256)));m.options.maxZoom=19;if(m._loaded&&m.getZoom()<m.options.minZoom)m.setZoom(m.options.minZoom,{animate:false});};
     limits();m.on('resize',limits);
     const limitZoom=m._limitZoom;
     m._limitZoom=function(z){return limitZoom.call(this,Number.isFinite(z)?z:this._zoom??this.getMinZoom());};
@@ -7520,7 +7520,8 @@ const ThreadSkins=(()=>{
   function preview(s,moving){
     const id=s.id,path='M14 50C50 50 40 24 84 29S128 57 155 34S200 21 226 24';
     const weave='preview-weave-'+id+'-'+(moving?'moving':'still');
-    return `<svg xmlns="http://www.w3.org/2000/svg" width="240" height="76" viewBox="0 0 240 76" role="img" aria-label="${s.name}${moving?'移动特效':'静态路线'}" data-trail-skin="${id}" class="skin-preview ${moving?'is-moving':''}"><defs><pattern id="${weave}" width="4" height="4" patternUnits="userSpaceOnUse"><path d="M0 1h4M1 0v4" fill="none" stroke="#fff7eb" stroke-width=".6" opacity=".45"/></pattern></defs><path d="${path}" fill="none" stroke="${s.color}" stroke-width="30" stroke-linecap="round"/><path d="${path}" fill="none" stroke="url(#${weave})" stroke-width="30" stroke-linecap="round"/><path class="preview-flow" d="${path}" fill="none" stroke="${s.ink}" stroke-width="${id==='sea'?7:2.5}" stroke-dasharray="${s.dash}" stroke-linecap="round"/>${glyph(id,52,35,1)+glyph(id,113,42,2)+glyph(id,183,23,3)}</svg>`;
+    const traveler=moving?`<g class="preview-traveler"><circle r="9" fill="${s.edge}" opacity=".7"/><circle r="5" fill="${s.ink}" stroke="${s.color}" stroke-width="2"/><animateMotion path="${path}" dur="6s" repeatCount="indefinite" calcMode="spline" keyPoints="0;.111111;1" keyTimes="0;.2;1" keySplines=".333333 0 .666667 .333333;0 0 1 1"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;.04;.96;1" dur="6s" repeatCount="indefinite"/></g>`:'';
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="240" height="76" viewBox="0 0 240 76" role="img" aria-label="${s.name}${moving?'移动特效':'静态路线'}" data-trail-skin="${id}" class="skin-preview ${moving?'is-moving':''}"><defs><pattern id="${weave}" width="4" height="4" patternUnits="userSpaceOnUse"><path d="M0 1h4M1 0v4" fill="none" stroke="#fff7eb" stroke-width=".6" opacity=".45"/></pattern></defs><path d="${path}" fill="none" stroke="${s.color}" stroke-width="30" stroke-linecap="round"/><path d="${path}" fill="none" stroke="url(#${weave})" stroke-width="30" stroke-linecap="round"/><path class="preview-flow" d="${path}" fill="none" stroke="${s.ink}" stroke-width="${id==='sea'?7:2.5}" stroke-dasharray="${s.dash}" stroke-linecap="round"/>${glyph(id,52,35,1)+glyph(id,113,42,2)+glyph(id,183,23,3)}${traveler}</svg>`;
   }
   function render(){
     const trails=document.getElementById('trail-skin-choices'),frames=document.getElementById('avatar-frame-choices');
@@ -7532,7 +7533,7 @@ const ThreadSkins=(()=>{
     document.querySelectorAll('[data-trail-choice]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.trailChoice===current)));
     document.querySelectorAll('[data-avatar-choice]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.avatarChoice===avatar)));
     const selected=document.getElementById('selected-trail-preview');
-    if(selected&&selected.dataset.skin!==current){selected.dataset.skin=current;selected.innerHTML=preview(skin(current),true)+'<b>'+skin(current).name+'</b>';}
+    if(selected&&selected.dataset.skin!==current){selected.dataset.skin=current;selected.innerHTML='<img class="skin-preview is-moving" src="assets/skins/'+current+'-motion.svg" alt="'+skin(current).name+'移动特效"><b>'+skin(current).name+'</b>';}
   }
   document.addEventListener('visibilitychange',()=>document.documentElement.dataset.pageHidden=String(document.hidden));
   return {catalog,line,apply,choose,render,preview};

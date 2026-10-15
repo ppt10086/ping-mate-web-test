@@ -10,7 +10,7 @@
 .trail-glyph-star{animation:threadStarGlimmer 3.6s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
 .trail-glyph-cloud{animation:threadCloudBreathe 4.8s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
 .trail-glyph-rose{animation:threadTrailBreathe 3.8s ease-in-out infinite}
-.preview-traveler{animation:threadPreviewTravel 5s linear infinite;offset-rotate:0deg}
+.preview-traveler{pointer-events:none}
 @keyframes threadPreviewTravel{to{offset-distance:100%}}
 @keyframes threadTrailFlow{from{stroke-dashoffset:calc(-1 * var(--flow-start))}to{stroke-dashoffset:calc(-1 * (var(--flow-start) + var(--flow-distance)))}}
 @keyframes threadTrailStart{from{stroke-dashoffset:0}to{stroke-dashoffset:calc(-1 * var(--flow-start))}}

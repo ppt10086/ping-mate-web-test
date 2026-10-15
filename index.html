@@ -5118,7 +5118,7 @@ html:root .hl-grid{gap:6px}
 <!-- 云端数据库配置（公开的 anon key，表已锁死，读写只走 SECURITY DEFINER 函数） -->
 <script>window.SiteDB={config:{url:"https://zloaudskrsdlisgwyfvt.supabase.co",key:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpsb2F1ZHNrcnNkbGlzZ3d5ZnZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3NTExMjIsImV4cCI6MjEwMzMyNzEyMn0.4TWnLMChq7C00NGK1DRAfYdyPb5udhqkj679nMCA8A4"}};</script>
 <!-- 构建信息：版本号 / 构建号 / 构建时间（自动更新与「关于」页读取） -->
-<script>window.PM_BUILD={"version": "3.8.21", "build": "2026101601", "notes": "轨迹随缩放变细、取消粒子，复现全屏布纹与响应布局，界面质量审计修复"};window.PM_CLOUD_GATEWAY={"url": "", "project": "zloaudskrsdlisgwyfvt"};</script>
+<script>window.PM_BUILD={"version": "3.8.21", "build": "2026101602", "notes": "轨迹随缩放适配并按反馈加粗30%、取消粒子，复现全屏布纹与响应布局，界面质量审计修复"};window.PM_CLOUD_GATEWAY={"url": "", "project": "zloaudskrsdlisgwyfvt"};</script>
 <link rel="stylesheet" href="vendor/leaflet.css">
 
 
@@ -7493,7 +7493,7 @@ const ThreadSkins=(()=>{
   ];
   const active=new Set();let current='rose',avatar='rose',Layer;
   const skin=id=>catalog.find(s=>s.id===id)||catalog[0];
-  const widthAt=zoom=>Math.max(2.4,Math.min(6,2.4+(zoom-5)*.26));
+  const widthAt=zoom=>Math.max(3.12,Math.min(7.8,(2.4+(zoom-5)*.26)*1.3));
   function line(points,options={}){
     if(!Layer)Layer=L.FeatureGroup.extend({
       initialize(pts,opt){
@@ -7539,7 +7539,7 @@ const ThreadSkins=(()=>{
     const id=s.id,path='M14 50C50 50 40 24 84 29S128 57 155 34S200 21 226 24';
     const weave='preview-weave-'+id+'-'+(moving?'moving':'still');
     const traveler=moving?`<g class="preview-traveler"><circle r="9" fill="${s.edge}" opacity=".7"/><circle r="5" fill="${s.ink}" stroke="${s.color}" stroke-width="2"/><animateMotion path="${path}" dur="6s" repeatCount="indefinite" calcMode="spline" keyPoints="0;.111111;1" keyTimes="0;.2;1" keySplines=".333333 0 .666667 .333333;0 0 1 1"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;.04;.96;1" dur="6s" repeatCount="indefinite"/></g>`:'';
-    return `<svg xmlns="http://www.w3.org/2000/svg" width="240" height="76" viewBox="0 0 240 76" role="img" aria-label="${s.name}${moving?'移动示例':'静态路线'}" data-trail-skin="${id}" class="skin-preview ${moving?'is-moving':''}"><defs><pattern id="${weave}" width="4" height="4" patternUnits="userSpaceOnUse"><path d="M0 1h4M1 0v4" fill="none" stroke="#fff7eb" stroke-width=".6" opacity=".28"/></pattern></defs><path d="${path}" fill="none" stroke="${s.color}" stroke-width="5" stroke-linecap="round"/><path d="${path}" fill="none" stroke="url(#${weave})" stroke-width="5" stroke-linecap="round"/><path class="preview-flow" d="${path}" fill="none" stroke="${s.ink}" stroke-width="1" opacity=".55" stroke-dasharray="${s.dash}" stroke-linecap="round"/>${traveler}</svg>`;
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="240" height="76" viewBox="0 0 240 76" role="img" aria-label="${s.name}${moving?'移动示例':'静态路线'}" data-trail-skin="${id}" class="skin-preview ${moving?'is-moving':''}"><defs><pattern id="${weave}" width="4" height="4" patternUnits="userSpaceOnUse"><path d="M0 1h4M1 0v4" fill="none" stroke="#fff7eb" stroke-width=".6" opacity=".28"/></pattern></defs><path d="${path}" fill="none" stroke="${s.color}" stroke-width="6.5" stroke-linecap="round"/><path d="${path}" fill="none" stroke="url(#${weave})" stroke-width="6.5" stroke-linecap="round"/><path class="preview-flow" d="${path}" fill="none" stroke="${s.ink}" stroke-width="1.3" opacity=".55" stroke-dasharray="${s.dash}" stroke-linecap="round"/>${traveler}</svg>`;
   }
   function render(){
     const trails=document.getElementById('trail-skin-choices'),frames=document.getElementById('avatar-frame-choices');
@@ -11064,10 +11064,12 @@ const ReplayTrack = {
       this._rejoining=false;
       const replayMap=MapX.maps.replay;
       MapMotion.camera(replayMap,L.latLng(MapX.p(pts[0].lat,pts[0].lng)),MapMotion.lifeZoom(pts[0].lat),true);
-      const arrived=await new Promise(resolve=>{const start=performance.now();const wait=()=>{
+      const arrived=await new Promise(resolve=>{const start=performance.now();let progressed=start,lastCenter=replayMap.getCenter(),lastZoom=replayMap.getZoom();const wait=()=>{
         if(seq!==this._runSeq||this._cancel){resolve(false);return;}
         if(!replayMap||!replayMap._pmCamera){resolve(!!replayMap);return;}
-        if(performance.now()-start>12000){MapMotion.stop(replayMap);resolve(false);return;}
+        const now=performance.now(),center=replayMap.getCenter(),zoom=replayMap.getZoom();
+        if(center.distanceTo(lastCenter)>.5||Math.abs(zoom-lastZoom)>.001){progressed=now;lastCenter=center;lastZoom=zoom;}
+        if(now-progressed>12000||now-start>45000){MapMotion.stop(replayMap);resolve(false);return;}
         requestAnimationFrame(wait);
       };wait();});
       if(!arrived){if(seq===this._runSeq&&status)status.textContent='路线底图暂未就绪，请稍后重试';return;}

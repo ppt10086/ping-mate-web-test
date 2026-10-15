@@ -13554,14 +13554,14 @@ window.ThreadMotion=(()=>{
     let animation;
     const squeeze=(to,release)=>{
       animation?.stop();
-      const from=getComputedStyle(cushion).scale;
-      animation=Motion.animateMini(cushion,{scale:[from==='none'?'1 1':from,to]},
+      const from=parseFloat(getComputedStyle(cushion).scale)||1;
+      animation=Motion.animateMini(cushion,{scale:[from,to]},
         {type:Motion.spring,stiffness:release?240:380,damping:release?18:30,mass:.85});
     };
     const cancel=Motion.press(el,()=>{
       if(reduced())return;
-      squeeze('1.055 .89',false);
-      return ()=>squeeze('1 1',true);
+      squeeze(.92,false);
+      return ()=>squeeze(1,true);
     });
     liveBound.set(el,{cushion,cancel:()=>{cancel();animation?.stop();}});
   }

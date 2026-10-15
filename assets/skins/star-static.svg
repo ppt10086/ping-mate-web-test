@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="76" viewBox="0 0 240 76" role="img" aria-label="星光绣带静态路线" class="skin-preview "><style>
+.thread-trail-flow{animation:threadTrailFlow 3.6s linear infinite;pointer-events:none}
+.thread-trail-flow[data-trail-skin="sea"]{animation-duration:5s}
+.thread-trail-flow[data-trail-skin="mint"]{animation-duration:4.8s}
+.thread-trail-flow[data-trail-skin="star"]{animation-duration:6s}
+.thread-trail-flow[data-trail-skin="cloud"]{animation:threadTrailFlow 7s linear infinite,threadTrailBreathe 4s ease-in-out infinite}
+.trail-glyph-sea{animation:threadBubbleLift 3.8s ease-in-out infinite}
+.trail-glyph-mint{animation:threadLeafSway 4.4s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+.trail-glyph-star{animation:threadStarGlimmer 3.6s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+.trail-glyph-cloud{animation:threadCloudBreathe 4.8s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+.trail-glyph-rose{animation:threadTrailBreathe 3.8s ease-in-out infinite}
+.is-moving .preview-flow{animation:threadTrailFlow 4.8s linear infinite}
+.preview-traveler{animation:threadPreviewTravel 5s linear infinite;offset-rotate:0deg}
+@keyframes threadPreviewTravel{to{offset-distance:100%}}
+@keyframes threadTrailFlow{to{stroke-dashoffset:-180}}
+@keyframes threadTrailBreathe{0%,100%{opacity:.45}50%{opacity:.95}}
+@keyframes threadBubbleLift{0%,100%{opacity:.3;transform:translateY(3px)}50%{opacity:.95;transform:translateY(-7px)}}
+@keyframes threadLeafSway{0%,100%{transform:rotate(-13deg)}50%{transform:rotate(15deg)}}
+@keyframes threadStarGlimmer{0%,100%{opacity:.3;transform:scale(.7)}50%{opacity:1;transform:scale(1.12)}}
+@keyframes threadCloudBreathe{0%,100%{transform:scale(.9);opacity:.6}50%{transform:scale(1.1);opacity:1}}
+html[data-page-hidden="true"] :is(.thread-trail-flow,.trail-glyph,.preview-flow,.preview-traveler),html[data-map-visible="false"] .leaflet-overlay-pane :is(.thread-trail-flow,.trail-glyph){animation-play-state:paused}
+#page-settings[hidden] .skin-preview *{animation-play-state:paused}
+@media(prefers-reduced-motion:reduce){.thread-trail-flow,.trail-glyph,.is-moving .preview-flow{animation:none!important}.preview-traveler{display:none}}
+@media(min-width:700px){.skin-choices{grid-template-columns:repeat(2,minmax(0,1fr))}.frame-choices{grid-template-columns:repeat(5,minmax(0,1fr))}}
+</style><defs><pattern id="preview-weave-star-still" width="4" height="4" patternUnits="userSpaceOnUse"><path d="M0 1h4M1 0v4" fill="none" stroke="#fff7eb" stroke-width=".6" opacity=".45"/></pattern></defs><path d="M14 50C50 50 40 24 84 29S128 57 155 34S200 21 226 24" fill="none" stroke="#77769e" stroke-width="30" stroke-linecap="round"/><path d="M14 50C50 50 40 24 84 29S128 57 155 34S200 21 226 24" fill="none" stroke="url(#preview-weave-star-still)" stroke-width="30" stroke-linecap="round"/><path class="preview-flow" d="M14 50C50 50 40 24 84 29S128 57 155 34S200 21 226 24" fill="none" stroke="#fff0bb" stroke-width="2.5" stroke-dasharray="2 29" stroke-linecap="round"/><g transform="translate(52 35)"><g class="trail-glyph trail-glyph-star" style="animation-delay:-0.37s"><path d="m0-7 2 5 5 2-5 2-2 5-2-5-5-2 5-2Z" fill="#fff0b8" stroke="#aa8757" stroke-width=".8"/></g></g><g transform="translate(113 42)"><g class="trail-glyph trail-glyph-star" style="animation-delay:-0.74s"><path d="m0-7 2 5 5 2-5 2-2 5-2-5-5-2 5-2Z" fill="#fff0b8" stroke="#aa8757" stroke-width=".8"/></g></g><g transform="translate(183 23)"><g class="trail-glyph trail-glyph-star" style="animation-delay:-1.1099999999999999s"><path d="m0-7 2 5 5 2-5 2-2 5-2-5-5-2 5-2Z" fill="#fff0b8" stroke="#aa8757" stroke-width=".8"/></g></g></svg>

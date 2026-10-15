@@ -1,0 +1,12 @@
+{
+  "created": "2026-10-15",
+  "origin": "Project-authored SVG artwork; existing rose avatar frame retained",
+  "size": "56x56 CSS pixels; transparent center; original texture tiled",
+  "frames": [
+    "sea",
+    "mint",
+    "star",
+    "cloud"
+  ],
+  "trail": "Paired SVG stroke adaptation from rubenspgcavalcante/leaflet-ant-path, MIT"
+}

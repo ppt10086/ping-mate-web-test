@@ -5002,7 +5002,11 @@ html:root .position-sheet{color:var(--map-ink);animation:none!important}
 html:root .position-sheet .sheet-meta,html:root .position-sheet .sheet-measures span{color:var(--map-muted)}
 html:root .fullmap .home-scale{background-image:var(--draw-frame),var(--draw-cloth)!important;color:var(--map-ink)}
 html:root .leaflet-marker-icon:has(.pm-dot.live),html:root .pm-dot.live{scale:1!important;transition:none!important;filter:none!important}
-html:root .settings-bubbles .set-bubble{position:relative;overflow:visible}
+html:root .settings-bubbles .set-bubble{position:relative;overflow:visible;background:none!important;opacity:1;transform:none}
+.set-art{position:absolute;inset:0;display:block;width:100%;height:100%;object-fit:contain;pointer-events:none}
+.set-art-dark{display:none}
+html[data-theme="dark"] .set-art-light{display:none}
+html[data-theme="dark"] .set-art-dark{display:block}
 html:root .fullmap .set-bubble .set-label{position:absolute;right:58px;left:auto;top:50%;transform:translateY(-50%);margin:0;opacity:1;visibility:visible;font-size:14px;font-weight:700;pointer-events:none}
 html:root #page-settings{font-size:16.8px;font-weight:650}
 html:root #page-settings .kv{font-size:16.8px;line-height:1.6;column-gap:12px}
@@ -5030,11 +5034,12 @@ html:root #page-settings .kv select{width:136px!important;max-width:100%;padding
 .frame-option>.skin-check{position:absolute;right:8px;top:8px}
 .avatar-frame-sample{position:relative;display:grid;place-items:center;width:56px;height:56px;background:center/auto no-repeat var(--frame-image,var(--art-06-me-ring))}
 .avatar-frame-sample>i{width:35px;height:35px;border-radius:50%;background:#eac2ba;z-index:0}
-html:root .pm-dot.live::before{width:56px;height:56px;inset:50% auto auto 50%;translate:-50% -50%;background-size:contain}
-html:root[data-avatar-frame="sea"] .pm-dot.live::before,.avatar-frame-sample[data-frame="sea"]{background-image:url('assets/skins/frame-sea.svg')}
-html:root[data-avatar-frame="mint"] .pm-dot.live::before,.avatar-frame-sample[data-frame="mint"]{background-image:url('assets/skins/frame-mint.svg')}
-html:root[data-avatar-frame="star"] .pm-dot.live::before,.avatar-frame-sample[data-frame="star"]{background-image:url('assets/skins/frame-star.svg')}
-html:root[data-avatar-frame="cloud"] .pm-dot.live::before,.avatar-frame-sample[data-frame="cloud"]{background-image:url('assets/skins/frame-cloud.svg')}
+html:root .fullmap .pm-dot.live::before,html:root .fullmap .pm-dot.live.has-avatar::before{width:56px;height:56px;inset:auto;left:50%;top:50%;translate:-50% -50%;transform:none;margin:0;background-size:contain}
+html:root .fullmap .pm-dot.live .pm-live-avatar{width:100%;height:100%;object-fit:cover;object-position:center}
+html:root[data-avatar-frame="sea"] .fullmap .pm-dot.live::before,.avatar-frame-sample[data-frame="sea"]{background-image:url('assets/skins/frame-sea.svg')}
+html:root[data-avatar-frame="mint"] .fullmap .pm-dot.live::before,.avatar-frame-sample[data-frame="mint"]{background-image:url('assets/skins/frame-mint.svg')}
+html:root[data-avatar-frame="star"] .fullmap .pm-dot.live::before,.avatar-frame-sample[data-frame="star"]{background-image:url('assets/skins/frame-star.svg')}
+html:root[data-avatar-frame="cloud"] .fullmap .pm-dot.live::before,.avatar-frame-sample[data-frame="cloud"]{background-image:url('assets/skins/frame-cloud.svg')}
 .thread-trail-flow{animation:threadTrailFlow 3.6s linear infinite;pointer-events:none}
 .thread-trail-flow[data-trail-skin="sea"]{animation-duration:5s}
 .thread-trail-flow[data-trail-skin="mint"]{animation-duration:4.8s}
@@ -5064,7 +5069,7 @@ html[data-page-hidden="true"] :is(.thread-trail-flow,.trail-glyph,.preview-flow,
 <!-- 云端数据库配置（公开的 anon key，表已锁死，读写只走 SECURITY DEFINER 函数） -->
 <script>window.SiteDB={config:{url:"https://zloaudskrsdlisgwyfvt.supabase.co",key:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpsb2F1ZHNrcnNkbGlzZ3d5ZnZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3NTExMjIsImV4cCI6MjEwMzMyNzEyMn0.4TWnLMChq7C00NGK1DRAfYdyPb5udhqkj679nMCA8A4"}};</script>
 <!-- 构建信息：版本号 / 构建号 / 构建时间（自动更新与「关于」页读取） -->
-<script>window.PM_BUILD={"version": "3.8.17", "build": "2026101501", "notes": "修复提示底图与实时点开关，新增五套全局轨迹皮肤和头像框、外观预览及自动屏幕适配"};window.PM_CLOUD_GATEWAY={"url": "", "project": "zloaudskrsdlisgwyfvt"};</script>
+<script>window.PM_BUILD={"version": "3.8.18", "build": "2026101502", "notes": "修复带照片头像框偏移，恢复设置分支三项图标并保留文字标签"};window.PM_CLOUD_GATEWAY={"url": "", "project": "zloaudskrsdlisgwyfvt"};</script>
 <link rel="stylesheet" href="vendor/leaflet.css">
 
 
@@ -5155,12 +5160,15 @@ html[data-page-hidden="true"] :is(.thread-trail-flow,.trail-glyph,.preview-flow,
         <!-- minimal：交付包自带的极简索引样式（透明背景、无边框，只留一条分隔细线） -->
         <div class="set-index set-orbit" id="set-index" aria-label="设置分类" hidden>
           <button class="set-bubble" type="button" aria-label="数据与关于" onclick="AppSettings.open('data')">
+            <img class="set-art set-art-light" src="assets/thread/tp-01-storage-light.png" alt=""><img class="set-art set-art-dark" src="assets/thread/tp-01-storage-dark.png" alt="">
             <svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="5" rx="7.5" ry="3"/><path d="M4.5 5v6c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3V5M4.5 11v6c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3v-6"/></svg>
           <span class="orb-t set-label">数据与关于</span></button>
           <button class="set-bubble" type="button" aria-label="账号" onclick="Home.settings(false);AppUI.go('profile')">
+            <img class="set-art set-art-light" src="assets/thread/tp-01-account-light.png" alt=""><img class="set-art set-art-dark" src="assets/thread/tp-01-account-dark.png" alt="">
             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M4.5 20c.7-4 3.2-6 7.5-6s6.8 2 7.5 6"/></svg>
           <span class="orb-t set-label">账号</span></button>
           <button class="set-bubble" type="button" aria-label="外观" onclick="AppSettings.open('theme')">
+            <img class="set-art set-art-light" src="assets/thread/tp-01-appearance-light.png" alt=""><img class="set-art set-art-dark" src="assets/thread/tp-01-appearance-dark.png" alt="">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18h1.1a2 2 0 0 0 1.4-3.4 1.8 1.8 0 0 1 1.3-3.1H17a4 4 0 0 0 4-4c0-4.1-4-7.5-9-7.5Z"/><circle cx="7.5" cy="11" r=".8"/><circle cx="10" cy="7.5" r=".8"/><circle cx="15" cy="7.5" r=".8"/></svg>
           <span class="orb-t set-label">外观</span></button>
         </div>

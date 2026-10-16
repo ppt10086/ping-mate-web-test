@@ -24,7 +24,7 @@
     "088,089": "Too many colored stars and raised decorations for the restrained reference"
   },
   "originals_modified": false,
-  "runtime_assets": 3,
+  "runtime_assets": 4,
   "atlas_or_previews_used": false,
   "redrawn": [
     {
@@ -38,9 +38,9 @@
       "operation": "flat vector redraw at 160 x 202; original candidate unmodified"
     },
     {
-      "asset": "text .login-brand",
-      "reference": "001_A01.png",
-      "operation": "live WenKai text; flat rose and blue; accessible and no raster title"
+      "asset": "../flat/ping-knit-brand.svg",
+      "reference": "001_A01.png; user requested flat knit graphic",
+      "operation": "Bundled OFL WenKai glyph outlines with original flat knit chevrons and two small stitched hearts; no raster stretching"
     }
   ],
   "revision": "A.1.1"

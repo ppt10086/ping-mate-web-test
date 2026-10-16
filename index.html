@@ -4724,6 +4724,9 @@ html:root .fullmap .pm-dot.live b{top:auto;bottom:calc(100% + 13px);width:max-co
 html:root .fullmap .pm-dot.live.moving b{top:auto}
 html:root .fullmap .glass-btn,html:root .orb-main,html:root .orb-item{filter:none;box-shadow:none}
 html:root .fullmap .orb-main{background-image:var(--art-01-menu)}
+html:root .fullmap .pm-dot.live .live-labels{position:absolute;left:50%;bottom:calc(100% + 13px);transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:5px;width:max-content;max-width:min(180px,calc(100vw - 56px));pointer-events:none}
+html:root .fullmap .pm-dot.live .live-labels b{position:relative;inset:auto;transform:none;max-width:100%;width:auto}
+html:root .fullmap .pm-dot.live .live-labels .live-speed{position:relative;inset:auto;transform:none;order:-1}
 
 html:root .thread-redrawn{overflow:hidden;background-origin:border-box!important;isolation:isolate}
 html:root :is(.toast,.home-notice,.position-sheet,.home-scale).thread-redrawn{background-color:var(--draw-color)!important;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none}
@@ -4907,23 +4910,26 @@ html[data-reduce-transparency="true"] #view-auth .auth-card{background:#fff7e8f5
 
 #view-auth::before,#view-auth::after{content:none!important}
 
-#view-auth .login-brand{font-size:48px;line-height:1.5;font-weight:750;color:#a36177;letter-spacing:.06em;filter:none;text-shadow:none;width:auto}
-#view-auth .login-brand em{font-style:normal;font-weight:650;color:#63859c;letter-spacing:.015em}
-#view-auth .login-brand::after{content:'';display:block;width:132px;margin:4px auto 0;border-bottom:1px dashed #b78c9a}
+#view-auth .login-brand{display:block;width:min(100%,294px);height:auto;filter:none;margin:0 auto 13px}
 #view-auth .login-pin{z-index:4;filter:none}
 #view-auth .login-cloud,#view-auth .login-star svg{filter:none}
 #view-auth .login-light{opacity:.45}
-html:root #view-auth .auth-card{box-shadow:0 10px 25px #98637516;border-color:#fff8e9b0}
+html:root #view-auth .auth-card{background:linear-gradient(125deg,#fffdf557,#fffaf015 46%,#fffdf52e)!important;background-image:linear-gradient(125deg,#fffdf557,#fffaf015 46%,#fffdf52e)!important;backdrop-filter:blur(4px) saturate(1.08);-webkit-backdrop-filter:blur(4px) saturate(1.08);box-shadow:0 10px 25px #98637516,inset 0 1px 0 #ffffffe0,inset 0 -1px 0 #fff8;border-color:#fffdf2c4}
+html:root #view-auth .field input{background:#fffcf173!important}
+#view-auth .login-thread-shadow{stroke:#a24b668a;stroke-width:3.2}
+#view-auth .login-thread{stroke:#b6607b;stroke-width:2.4}
 html:root #view-auth #auth-login-btn{box-shadow:none}
-@media(max-height:740px){#view-auth .login-brand{font-size:42px;width:auto}}
-#view-auth.is-keyboard .login-brand{font-size:28px;width:auto}
+@media(max-height:740px){#view-auth .login-brand{width:235px}}
+#view-auth.is-keyboard .login-brand{width:175px}
+html[data-reduce-transparency="true"] #view-auth .auth-card{background:#fff7e8f5!important;backdrop-filter:none;-webkit-backdrop-filter:none}
+@media(prefers-reduced-transparency:reduce){html:root #view-auth .auth-card{background:#fff7e8f5!important;backdrop-filter:none;-webkit-backdrop-filter:none}}
 
 </style>
 
 <!-- 云端数据库配置（公开的 anon key，表已锁死，读写只走 SECURITY DEFINER 函数） -->
 <script>window.SiteDB={config:{url:"https://zloaudskrsdlisgwyfvt.supabase.co",key:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpsb2F1ZHNrcnNkbGlzZ3d5ZnZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3NTExMjIsImV4cCI6MjEwMzMyNzEyMn0.4TWnLMChq7C00NGK1DRAfYdyPb5udhqkj679nMCA8A4"}};</script>
 <!-- 构建信息：版本号 / 构建号 / 构建时间（自动更新与「关于」页读取） -->
-<script>window.PM_BUILD={"version": "A.1.1", "nativeVersion": "4.1.1", "build": "2026101606", "notes": "拖动中轨迹刷新、连续远距镜头、静默缓存与浅色平面布艺界面"};window.PM_CLOUD_GATEWAY={"url": "", "project": "zloaudskrsdlisgwyfvt"};</script>
+<script>window.PM_BUILD={"version": "A.1.1", "nativeVersion": "4.1.1", "build": "2026101607", "notes": "拖动中轨迹刷新、连续远距镜头、静默缓存与浅色平面布艺界面"};window.PM_CLOUD_GATEWAY={"url": "", "project": "zloaudskrsdlisgwyfvt"};</script>
 <link rel="stylesheet" href="vendor/leaflet.css">
 
 
@@ -4963,7 +4969,7 @@ html:root #view-auth #auth-login-btn{box-shadow:none}
   <div class="login-knit" aria-hidden="true"></div><div class="login-sky" aria-hidden="true"></div><div class="login-light" aria-hidden="true"></div>
 <svg class="login-cloud cloud-left" viewBox="0 0 240 130" aria-hidden="true"><defs><pattern id="login-cloud-0" width="4" height="4" patternUnits="userSpaceOnUse"><path d="M0 1h4M1 0v4" stroke="#b9ac94" stroke-width=".45" opacity=".3"/></pattern></defs><path d="M20 114C-4 100 0 70 25 65C19 30 59 12 81 36C95-2 147-2 161 38C190 15 221 39 214 68C250 72 245 115 220 118Z" fill="currentColor" stroke="#d7c6ac" stroke-width="2"/><path d="M20 114C-4 100 0 70 25 65C19 30 59 12 81 36C95-2 147-2 161 38C190 15 221 39 214 68C250 72 245 115 220 118Z" fill="url(#login-cloud-0)"/></svg><svg class="login-cloud cloud-right" viewBox="0 0 240 130" aria-hidden="true"><defs><pattern id="login-cloud-1" width="4" height="4" patternUnits="userSpaceOnUse"><path d="M0 1h4M1 0v4" stroke="#b9ac94" stroke-width=".45" opacity=".3"/></pattern></defs><path d="M20 114C-4 100 0 70 25 65C19 30 59 12 81 36C95-2 147-2 161 38C190 15 221 39 214 68C250 72 245 115 220 118Z" fill="currentColor" stroke="#d7c6ac" stroke-width="2"/><path d="M20 114C-4 100 0 70 25 65C19 30 59 12 81 36C95-2 147-2 161 38C190 15 221 39 214 68C250 72 245 115 220 118Z" fill="url(#login-cloud-1)"/></svg><svg class="login-cloud cloud-bottom" viewBox="0 0 240 130" aria-hidden="true"><defs><pattern id="login-cloud-2" width="4" height="4" patternUnits="userSpaceOnUse"><path d="M0 1h4M1 0v4" stroke="#b9ac94" stroke-width=".45" opacity=".3"/></pattern></defs><path d="M20 114C-4 100 0 70 25 65C19 30 59 12 81 36C95-2 147-2 161 38C190 15 221 39 214 68C250 72 245 115 220 118Z" fill="currentColor" stroke="#d7c6ac" stroke-width="2"/><path d="M20 114C-4 100 0 70 25 65C19 30 59 12 81 36C95-2 147-2 161 38C190 15 221 39 214 68C250 72 245 115 220 118Z" fill="url(#login-cloud-2)"/></svg>
   <header class="login-heading">
-   <h1 style="margin:0"><span class="login-brand">同屏 <em>Ping</em></span><span id="auth-logo" hidden></span></h1>
+   <h1 style="margin:0"><img class="login-brand" src="assets/flat/ping-knit-brand.svg" alt="同屏 Ping" width="522" height="164"><span id="auth-logo" hidden></span></h1>
    <p class="auth-tagline">在同一个世界<br>和你更靠近一点</p>
   </header>
   <svg class="login-route" viewBox="0 0 390 245" preserveAspectRatio="none" aria-hidden="true">
@@ -10653,6 +10659,8 @@ const Home = {
       if(!el || !p)return;
       let speed=el.querySelector('.live-speed');
       if(!speed){speed=document.createElement('small');speed.className='live-speed';el.querySelector('.pm-dot').append(speed);}
+      const dot=el.querySelector('.pm-dot');
+      if(!dot.querySelector('.live-labels')){const labels=document.createElement('span');labels.className='live-labels';labels.append(dot.querySelector('b'),speed);dot.append(labels);}
       const moving=Number(p.spd)>.55 && Date.now()-new Date(p.ts).getTime()<120000;
       speed.hidden=!moving;speed.textContent=moving?(Number(p.spd)*3.6).toFixed(1)+' km/h':'';
       el.querySelector('.pm-dot').classList.toggle('moving',moving);

@@ -5121,7 +5121,7 @@ html:root #view-auth{
 }
 html:root #view-auth[hidden]{display:none!important}
 #view-auth::-webkit-scrollbar{display:none}
-#view-auth .login-stage{position:relative;width:min(100%,460px);margin:auto;overflow:hidden;min-height:max(var(--login-content-height,0px),680px,100svh);padding-top:env(safe-area-inset-top,0px)}
+#view-auth .login-stage{position:relative;width:min(100%,460px);margin:auto;overflow:hidden;overflow:clip;min-height:max(var(--login-content-height,0px),680px,100svh);padding-top:env(safe-area-inset-top,0px)}
 #view-auth .login-knit{position:absolute;inset:0;pointer-events:none;background:url('assets/login/knit-rose-tile.png') 0 0/auto repeat;opacity:.16}
 #view-auth .login-sky{position:absolute;inset:0;pointer-events:none;background:#e4eff2 url('assets/thread/tp-09-blue-linen-light.png') 0 0/auto repeat;mask-image:radial-gradient(ellipse 100% 54% at 55% 4%,#000 20%,transparent 100%);-webkit-mask-image:radial-gradient(ellipse 100% 54% at 55% 4%,#000 20%,transparent 100%)}
 #view-auth .login-light{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 47%,#fffbefb8,transparent 66%),linear-gradient(0deg,#fff9ee44,transparent 42%)}
@@ -5187,7 +5187,7 @@ html[data-reduce-transparency="true"] #view-auth .auth-card{background:#fff7e8f5
 <!-- 云端数据库配置（公开的 anon key，表已锁死，读写只走 SECURITY DEFINER 函数） -->
 <script>window.SiteDB={config:{url:"https://zloaudskrsdlisgwyfvt.supabase.co",key:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpsb2F1ZHNrcnNkbGlzZ3d5ZnZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3NTExMjIsImV4cCI6MjEwMzMyNzEyMn0.4TWnLMChq7C00NGK1DRAfYdyPb5udhqkj679nMCA8A4"}};</script>
 <!-- 构建信息：版本号 / 构建号 / 构建时间（自动更新与「关于」页读取） -->
-<script>window.PM_BUILD={"version": "A.1.0", "nativeVersion": "4.1.0", "build": "2026101603", "notes": "布艺玻璃登录页、地图阻尼、实时描绘轨迹预览与流动针脚"};window.PM_CLOUD_GATEWAY={"url": "", "project": "zloaudskrsdlisgwyfvt"};</script>
+<script>window.PM_BUILD={"version": "A.1.0", "nativeVersion": "4.1.0", "build": "2026101604", "notes": "布艺玻璃登录页、地图阻尼、实时描绘轨迹预览与流动针脚"};window.PM_CLOUD_GATEWAY={"url": "", "project": "zloaudskrsdlisgwyfvt"};</script>
 <link rel="stylesheet" href="vendor/leaflet.css">
 
 
@@ -7679,7 +7679,9 @@ const LoginScene=(()=>{
     const error=AppAuth.err;
     AppAuth.err=function(message){
       error.call(this,String(message).replace('请输入用户名和密码','请输入账号和密码').replace('，或切换到「注册新账号」','').replaceAll('用户名','账号'));
-      const el=view.querySelector('#auth-err');el.scrollIntoView({block:'nearest',behavior:'instant'});
+      const rect=view.querySelector('#auth-err').getBoundingClientRect(),bounds=view.getBoundingClientRect();
+      if(rect.top<bounds.top+12)view.scrollTop+=rect.top-bounds.top-12;
+      else if(rect.bottom>bounds.bottom-12)view.scrollTop+=rect.bottom-bounds.bottom+12;
     };
     const show=AppAuth.showAuth;
     AppAuth.showAuth=function(){show.call(this);update();};

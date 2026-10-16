@@ -1,0 +1,5 @@
+﻿source,asset,crop,width,height,source_sha256,operation,reason
+001_A01.png,ping-brand-embroidered.png,"[13, 83, 243, 172]",230,89,cac958f7cbab1572b156272de09a7b47ed4dc69b8dfaa08c63a1e6cf817bd9e5,crop + isolated remnant removal; no resampling,Transparent embroidered brand
+031_C07.png,ping-pin-red.png,"[42, 43, 198, 245]",156,202,cc7eb986da56b0cf5cd75a5d6c2573363f4a5e1ead7d4cb2c99d6480500e207b,crop + isolated remnant removal; no resampling,Exclude stray line and dot outside badge
+032_C08.png,ping-pin-blue.png,"[58, 43, 204, 245]",146,202,b8978068b1d111fc7be124edcc3edde6d19be1d78a5f15c76391e6fbced6e941,crop + isolated remnant removal; no resampling,Exclude stray line and dot outside badge
+020_B10.png,knit-rose-tile.png,"[80, 80, 176, 176]",96,96,f82c8899c93f03a81a837030af7c8702ef6c9cb33f7644adef1ec916a30efe2d,crop only; no resampling,"Interior fabric, tiled at original pixel size"

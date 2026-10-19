@@ -8,5 +8,8 @@
     "star",
     "cloud"
   ],
-  "trail": "Paired SVG stroke adaptation from rubenspgcavalcante/leaflet-ant-path, MIT"
+  "trail": "Paired SVG stroke adaptation from rubenspgcavalcante/leaflet-ant-path, MIT",
+  "restored_from": "Project v3.8.21 IPA 20261016: original five light palettes and four frame SVGs",
+  "restored_in_build": "2026101803",
+  "preview": "Current progressive draw and flow retained; regenerated from restored catalog"
 }

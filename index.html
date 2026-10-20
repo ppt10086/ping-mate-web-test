@@ -9436,7 +9436,17 @@ const MapX = {
           }
           return result;
         };
-        const remove=ly._removeTile;ly._removeTile=function(key){const t=this._tiles[key];if(t){if(t.el._pmAbortJob)t.el._pmAbortJob();if(!t.loaded){t.el.onload=t.el.onerror=null;t.el.src=BLANK_TILE;}}return remove.call(this,key);};
+        const remove=ly._removeTile;ly._removeTile=function(key){
+          const t=this._tiles[key];if(t){
+            if(t.el._pmAbortJob)t.el._pmAbortJob();
+            t.el.onload=t.el.onerror=null;
+            // Finished images need only GridLayer's detach/unload bookkeeping.
+            // TileLayer additionally decodes an empty image for every old tile.
+            if(t.loaded)return L.GridLayer.prototype._removeTile.call(this,key);
+            t.el.src=BLANK_TILE;
+          }
+          return remove.call(this,key);
+        };
       };
       retain(layer);
       // Lower detail remains spatially registered underneath incoming detail.

@@ -4975,7 +4975,7 @@ html[data-reduce-transparency="true"] #view-auth .auth-card{background:#fff7e8f5
 <!-- 云端数据库配置（公开的 anon key，表已锁死，读写只走 SECURITY DEFINER 函数） -->
 <script>window.SiteDB={config:{url:"https://zloaudskrsdlisgwyfvt.supabase.co",key:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpsb2F1ZHNrcnNkbGlzZ3d5ZnZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3NTExMjIsImV4cCI6MjEwMzMyNzEyMn0.4TWnLMChq7C00NGK1DRAfYdyPb5udhqkj679nMCA8A4"}};</script>
 <!-- 构建信息：版本号 / 构建号 / 构建时间（自动更新与「关于」页读取） -->
-<script>window.PM_BUILD={"version": "A.2.1", "nativeVersion": "4.1.1", "build": "2026102202", "notes": "历史轨迹新增迷雾视图，可按日期查看自己与伙伴的探索足迹"};window.PM_CLOUD_GATEWAY={"url": "", "project": "zloaudskrsdlisgwyfvt"};</script>
+<script>window.PM_BUILD={"version": "A.2.2", "nativeVersion": "4.1.1", "build": "2026102301", "notes": "地图拖动阻尼、平滑缩放与有底图承接的细节淡入淡出"};window.PM_CLOUD_GATEWAY={"url": "", "project": "zloaudskrsdlisgwyfvt"};</script>
 <link rel="stylesheet" href="vendor/leaflet.css">
 
 
@@ -7007,6 +7007,24 @@ const MapMotion = {
   markers: new Map(),
   raf: 0,
   reduced(){ return window.matchMedia('(prefers-reduced-motion: reduce)').matches; },
+  revealTile(m,layer,tile,coords){
+    if(!m||layer!==m._netLayer||!coords||this.reduced()||!tile.animate)return;
+    const level=layer._levels[coords.z],pos=L.DomUtil.getPosition(tile);
+    if(!level||!pos)return;
+    const center=m.project(m.getCenter(),coords.z).subtract(level.origin),half=m.getSize().divideBy(2*m.getZoomScale(m.getZoom(),coords.z)),size=layer.getTileSize();
+    if(pos.x>center.x+half.x||pos.x+size.x<center.x-half.x||pos.y>center.y+half.y||pos.y+size.y<center.y-half.y)return;
+    // Fade only over an already decoded geographic parent; never fade into blank.
+    const backing=[m._continuityLayer,m._overviewLayer,...m._retiringLayers||[]];
+    const covered=backing.some(l=>Object.values(l?._tiles||{}).some(t=>{
+      const dz=coords.z-t.coords.z;if(!t.loaded||dz<0||t.el._pmFade||!t.el.complete||!t.el.naturalWidth||t.el.style.visibility==='hidden'||!t.el.isConnected||t.el.parentElement?.style.display==='none')return false;
+      const n=2**t.coords.z,x=Math.floor(coords.x/2**dz);
+      return ((x%n)+n)%n===((t.coords.x%n)+n)%n&&Math.floor(coords.y/2**dz)===t.coords.y;
+    }));
+    if(!covered)return;
+    const fade=tile.animate([{opacity:.12},{opacity:1}],{duration:260,easing:'cubic-bezier(.22,.61,.36,1)'});
+    tile._pmFade=fade;
+    fade.finished.then(()=>{if(tile._pmFade===fade){tile._pmFade=null;fade.cancel();}},()=>{});
+  },
   ease(v){v=Math.max(0,Math.min(1,v));return v*v*v*(v*(6*v-15)+10);},
   visible(m){ return m && m._el && m._el.isConnected && m._el.getClientRects().length && !document.hidden; },
   valid(p){ return p && p.lat!=null && p.lng!=null && p.lat!=='' && p.lng!=='' && Number.isFinite(Number(p.lat)) && Number.isFinite(Number(p.lng)) && Math.abs(Number(p.lat)) <= 90 && Math.abs(Number(p.lng)) <= 180; },
@@ -7201,7 +7219,9 @@ const MapMotion = {
     const el=m.getContainer();
     m.on('layeradd layerremove',()=>{m._pmTileRevision=(m._pmTileRevision||0)+1;});
     m.options.bounceAtZoomLimits=false;
-    Object.assign(m.options,{inertia:true,inertiaDeceleration:2200,inertiaMaxSpeed:1000,easeLinearity:.2});
+    Object.assign(m.options,{inertia:true,inertiaDeceleration:1800,inertiaMaxSpeed:420,easeLinearity:.28});
+    // Leaflet's 50ms history drops lift-off samples on irregular touch delivery.
+    m.dragging._prunePositions=function(time){while(this._positions.length>1&&time-this._times[0]>100){this._positions.shift();this._times.shift();}};
     const limits=()=>{m.options.minZoom=Math.max(MapX.LOCAL_MAX+1,Math.ceil(Math.log2((m.getSize().y+4)/256)));m.options.maxZoom=19;if(m._loaded&&m.getZoom()<m.options.minZoom)m.setZoom(m.options.minZoom,{animate:false});};
     limits();m.on('resize',limits);
     const limitZoom=m._limitZoom;
@@ -7244,7 +7264,7 @@ const MapMotion = {
         m.eachLayer(layer=>{if(layer instanceof L.Renderer&&layer._map&&!m._animatingZoom)layer._update();else if(layer instanceof L.Marker)MapMotion.markerVisibility(m,layer);});
       });
     });
-    m._pmVectorCleanup=()=>{cancelAnimationFrame(vectorFrame);vectorFrame=0;clearTimeout(m._pmTipSettle);};
+    m._pmVectorCleanup=()=>{cancelAnimationFrame(vectorFrame);vectorFrame=0;clearTimeout(m._pmTipSettle);clearTimeout(m._pmRetireTimer);};
     m.on('unload',m._pmVectorCleanup);
     const holdTips=()=>{
       clearTimeout(m._pmTipSettle);
@@ -7285,7 +7305,7 @@ const MapMotion = {
         if(m._pmWheel!==s) return;
         const dt=s.last?Math.min(64,now-s.last):16; s.last=now;
         const gap=s.target-m.getZoom();
-        const z=Math.abs(gap)<.002?s.target:m.getZoom()+gap*(1-Math.exp(-dt/150));
+        const z=Math.abs(gap)<.002?s.target:m.getZoom()+gap*(1-Math.exp(-dt/180));
         const c=m.unproject(m.project(s.latlng,z).subtract(s.anchor.subtract(m.getSize().divideBy(2))),z);
         m._move(c,z,{flyTo:true});
         if(Math.abs(gap)<.002){ m._pmWheel=null; s.raf=0; m._moveEnd(true); }
@@ -7298,7 +7318,7 @@ const MapMotion = {
       if(key==='home'||key==='loc') Follow.userMoved(false);
       if(key==='replay'){ReplayTrack._follow=false;if(m._pmReplayMoving){m._pmReplayMoving=false;m._pmProg=false;m._moveEnd(false);}}
     };
-    m.on('dragstart',interrupt);
+    m.on('dragstart',()=>{m.options.inertia=!this.reduced();interrupt();});
     el.addEventListener('touchstart',e => { if(e.touches.length>1) interrupt(); },{passive:true,capture:true});
     el.addEventListener('dblclick',interrupt,{passive:true});
     el.addEventListener('keydown',e => { if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','+','-','='].includes(e.key)) interrupt(); });
@@ -9408,7 +9428,7 @@ const MapX = {
       layer = L.tileLayer(s.url, opt);
       layer.createTile=function(coords,done){
         const tile=document.createElement('img');tile.alt='';tile.setAttribute('role','presentation');
-        tile.onload=()=>{tile.style.visibility='';done(null,tile);if(tile.src.indexOf('blob:')!==0)TileCache.grab(url,()=>this._map&&!this._pmRetiring?MapTileQueue.priority({layer:this,coords}):Infinity);};
+        tile.onload=()=>{tile.style.visibility='';MapMotion.revealTile(this._map,this,tile,coords);done(null,tile);if(tile.src.indexOf('blob:')!==0)TileCache.grab(url,()=>this._map&&!this._pmRetiring?MapTileQueue.priority({layer:this,coords}):Infinity);};
         tile.onerror=()=>{
           tile.style.visibility='hidden';
           // A corrupt cached image is not a provider outage. Evict it and try
@@ -9454,6 +9474,7 @@ const MapX = {
         const remove=ly._removeTile;ly._removeTile=function(key){
           const t=this._tiles[key];if(t){
             if(t.el._pmAbortJob)t.el._pmAbortJob();
+            t.el._pmFade?.cancel();t.el._pmFade=null;
             t.el.onload=t.el.onerror=null;
             // Finished images need only GridLayer's detach/unload bookkeeping.
             // TileLayer additionally decodes an empty image for every old tile.
@@ -9532,7 +9553,7 @@ const MapX = {
       const ts = layer._tiles || {};
       Object.keys(ts).forEach(k => {
         const t = ts[k] && ts[k].el;
-        if(t){if(t._pmAbortJob)t._pmAbortJob();t.onload = t.onerror = null;if(!ts[k].loaded)t.src=BLANK_TILE;if(t.parentNode)t.parentNode.removeChild(t); }
+        if(t){t._pmFade?.cancel();t._pmFade=null;if(t._pmAbortJob)t._pmAbortJob();t.onload = t.onerror = null;if(!ts[k].loaded)t.src=BLANK_TILE;if(t.parentNode)t.parentNode.removeChild(t); }
       });
       layer._tiles = {};
     }catch(e){}
@@ -9556,14 +9577,20 @@ const MapX = {
     if(this._localBitmaps.size>32)this._localBitmaps.delete(this._localBitmaps.keys().next().value);
     pending.catch(()=>this._localBitmaps.delete(url));return pending;
   },
-  _clearRetiring(m){(m._retiringLayers||[]).forEach(layer=>{this._killTiles(layer);if(layer._map)m.removeLayer(layer);});m._retiringLayers=[];},
+  _clearRetiring(m,force=false){
+    clearTimeout(m._pmRetireTimer);m._pmRetireTimer=0;
+    if(!force&&m._retiringLayers?.length&&Object.values(m._netLayer?._tiles||{}).some(t=>t.el._pmFade)){
+      m._pmRetireTimer=setTimeout(()=>this._clearRetiring(m),280);return;
+    }
+    (m._retiringLayers||[]).forEach(layer=>{this._killTiles(layer);if(layer._map)m.removeLayer(layer);});m._retiringLayers=[];
+  },
   _teardownBase(m,preserve=false){
     if(m._tileStop){ try{ m._tileStop(); }catch(e){} m._tileStop = null; }
     if(m._localLayer){ this._killTiles(m._localLayer); try{ m.removeLayer(m._localLayer); }catch(e){} m._localLayer = null; }
     if(m._netLayer){if(preserve)this._retire(m,m._netLayer);else{this._killTiles(m._netLayer);m.removeLayer(m._netLayer);}m._netLayer=null;}
     if(m._continuityLayer){if(preserve)this._retire(m,m._continuityLayer);else{this._killTiles(m._continuityLayer);m.removeLayer(m._continuityLayer);}m._continuityLayer=null;}
     if(m._overviewLayer){if(preserve)this._retire(m,m._overviewLayer);else{this._killTiles(m._overviewLayer);m.removeLayer(m._overviewLayer);}m._overviewLayer=null;}
-    if(!preserve)this._clearRetiring(m);
+    if(!preserve)this._clearRetiring(m,true);
   },
 
   /* 把瓦片源的状态映射到地图上的提示条（加载中 / 较慢 / 隐藏）。
@@ -9665,7 +9692,7 @@ const MapX = {
       maxZoom: 19,
       minZoom: 2,
       maxBoundsViscosity: 0,
-      fadeAnimation: false,          // 不做淡入：命中本地缓存的瓦片直接铺上，少 200ms 的「慢慢浮出来」
+      fadeAnimation: false,          // Detail-only crossfade is coverage-gated by MapMotion; backing stays opaque.
       zoomAnimationThreshold: 2      // 跨 1–2 级做平滑缩放动画，超过就直接切（更快也更不容易错位）
     });
     if(m.attributionControl) m.attributionControl.setPrefix(false);

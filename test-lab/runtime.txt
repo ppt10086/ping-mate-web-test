@@ -7972,11 +7972,12 @@ const FogBuildings={
       if(x<0||y<0||x>=n||y>=n)continue;
       this.wanted.add(x+','+y);
     }
-    const visited=new Set();for(const key of this.fog.cells.keys()){
-      const [x,y]=key.split(',').map(Number),t=this.tilePoint((x+.5)*this.fog.CELL,(y+.5)*this.fog.CELL);
-      for(let dx=-1;dx<=1;dx++)for(let dy=-1;dy<=1;dy++)visited.add((t[0]+dx)+','+(t[1]+dy));
+    if(this._cellSource!==this.fog.cells||this._cellSize!==this.fog.cells.size){
+      const occupied=new Set();for(const key of this.fog.cells.keys()){const [x,y]=key.split(',').map(Number);occupied.add(this.tilePoint((x+.5)*this.fog.CELL,(y+.5)*this.fog.CELL).join(','));}
+      this.visited=new Set();for(const key of occupied){const [x,y]=key.split(',').map(Number);for(let dx=-1;dx<=1;dx++)for(let dy=-1;dy<=1;dy++)this.visited.add((x+dx)+','+(y+dy));}
+      this._cellSource=this.fog.cells;this._cellSize=this.fog.cells.size;
     }
-    for(const key of this.wanted)if(visited.has(key))this.enqueue(key);
+    for(const key of this.wanted)if(this.visited.has(key))this.enqueue(key);
     this.select();this.drain();
   },
   enqueue(key){
@@ -8052,7 +8053,10 @@ const FogBuildings={
   async select(){
     if(!this.alive())return;const seq=++this._selectSeq,parts=[],lit=new Set();let started=performance.now();
     for(const [key,tile] of this.tiles){
-      if(!tile.parts)tile.parts=tile.features.map((f,i)=>this.prepare(f,key+'/'+i)).filter(Boolean).map(p=>({...p,tile:key}));
+      if(!tile.parts){const prepared=[];for(let i=0;i<tile.features.length;i++){
+        const part=this.prepare(tile.features[i],key+'/'+i);if(part)prepared.push({...part,tile:key});
+        if(performance.now()-started>5){await new Promise(resolve=>setTimeout(resolve,0));if(seq!==this._selectSeq||!this.alive())return;started=performance.now();}
+      }tile.parts=prepared;}
       for(const part of tile.parts){
         parts.push(part);if(!lit.has(part.id)&&this.touches(part))lit.add(part.id);
         if(performance.now()-started>5){await new Promise(resolve=>setTimeout(resolve,0));if(seq!==this._selectSeq||!this.alive())return;started=performance.now();}
@@ -8068,9 +8072,12 @@ const FogBuildings={
   },
   draw(ctx,map){
     ctx.globalCompositeOperation='destination-out';ctx.globalAlpha=1;ctx.fillStyle='#000';
-    for(const part of this.parts)for(const polygon of part.polygons){ctx.beginPath();for(const ring of polygon){
+    const size=map.getSize();for(const part of this.parts){
+      const b=part.bounds,a=map.latLngToContainerPoint(L.latLng(MapX.p(...this.fog.unmerc(b[0],b[3])))),z=map.latLngToContainerPoint(L.latLng(MapX.p(...this.fog.unmerc(b[2],b[1]))));
+      if(z.x<0||a.x>size.x||z.y<0||a.y>size.y)continue;
+      for(const polygon of part.polygons){ctx.beginPath();for(const ring of polygon){
       ring.forEach((p,i)=>{const q=map.latLngToContainerPoint(L.latLng(MapX.p(p[1],p[0])));if(i)ctx.lineTo(q.x,q.y);else ctx.moveTo(q.x,q.y);});ctx.closePath();
-    }ctx.fill('evenodd');}
+    }ctx.fill('evenodd');}}
   }
 };
 const RoutePhotos = {

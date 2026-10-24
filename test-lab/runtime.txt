@@ -13170,7 +13170,7 @@ const Fog = {
     return animation.finished.then(()=>{if(this._fade===animation){canvas.style.opacity=String(target);this._fade=null;onProgress?.(target);animation.cancel();}},()=>{}).finally(()=>cancelAnimationFrame(raf));
   },
   async hide(onProgress){
-    this._generation++;const canvas=this.canvas;await this.fade(0,onProgress);if(this.canvas===canvas&&!this._fade)this.close();
+    const generation=++this._generation,canvas=this.canvas;await this.fade(0,onProgress);if(generation===this._generation&&this.canvas===canvas&&!this._fade)this.close();
   },
   attach(){
     const m=this.map;if(!m)return;const cv=document.createElement('canvas');

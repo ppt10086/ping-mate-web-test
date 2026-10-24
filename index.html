@@ -5009,7 +5009,7 @@ html:root .permission-welcome footer .btn-primary{color:#75465d;background-color
 <!-- 云端数据库配置（公开的 anon key，表已锁死，读写只走 SECURITY DEFINER 函数） -->
 <script>window.SiteDB={config:{url:"https://zloaudskrsdlisgwyfvt.supabase.co",key:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpsb2F1ZHNrcnNkbGlzZ3d5ZnZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3NTExMjIsImV4cCI6MjEwMzMyNzEyMn0.4TWnLMChq7C00NGK1DRAfYdyPb5udhqkj679nMCA8A4"}};</script>
 <!-- 构建信息：版本号 / 构建号 / 构建时间（自动更新与「关于」页读取） -->
-<script>window.PM_BUILD={"version": "A.3.1", "nativeVersion": "4.1.1", "build": "2026102402", "notes": "Ta的活动、小记账、分步权限引导与品牌开屏"};window.PM_CLOUD_GATEWAY={"url": "", "project": "zloaudskrsdlisgwyfvt"};</script>
+<script>window.PM_BUILD={"version": "A.3.2", "nativeVersion": "4.1.1", "build": "2026102403", "notes": "历史汇总、轨迹复现共享缓存与静默预取"};window.PM_CLOUD_GATEWAY={"url": "", "project": "zloaudskrsdlisgwyfvt"};</script>
 <link rel="stylesheet" href="vendor/leaflet.css">
 
 
@@ -7788,7 +7788,7 @@ const FeatureCache={
   ttl(to){return Number(to)>=Date.now()?20000:Date.now()-Number(to)<864e5?300000:6*3600e3;},
   async read(who,from,to,limit,load,options={}){
     const scope=this.scope();if(!scope)return load();
-    if(scope!==this._scope){this.epoch++;this._scope=scope;this.memory.clear();this.flights.clear();this.queued.clear();}
+    if(scope!==this._scope){this.epoch++;this._scope=scope;this._dayRevisions={};this.memory.clear();this.flights.clear();this.queued.clear();}
     const epoch=this.epoch,key=JSON.stringify([scope,who,Number(new Date(from)),Number(new Date(to)),limit]);
     const row=await this.stored(key);
     if(scope!==this.scope()||epoch!==this.epoch)throw new Error('账号已切换');
@@ -7814,18 +7814,24 @@ const FeatureCache={
       return value;
     }).finally(()=>{if(this.flights.get(key)===job)this.flights.delete(key);});this.flights.set(key,job);return job;
   },
-  invalidateSummaries(){this.summaryRevision=(this.summaryRevision||0)+1;},
+  invalidateSummaries(days){
+    if(!Array.isArray(days)){this.summaryRevision=(this.summaryRevision||0)+1;return;}
+    this._dayRevisions=this._dayRevisions||{};
+    for(const day of new Set(days))this._dayRevisions[day]=(this._dayRevisions[day]||0)+1;
+  },
+  dayRevision(day){return this._dayRevisions?.[day]||0;},
   async summary(days,load,who='me'){
     const scope=this.scope();if(!scope)return load();
-    if(scope!==this._scope){this.epoch++;this._scope=scope;this.memory.clear();this.flights.clear();this.queued.clear();}
-    const key=JSON.stringify([scope,'summary-v1',who,days]),revision=this.summaryRevision||0,epoch=this.epoch;
+    if(scope!==this._scope){this.epoch++;this._scope=scope;this._dayRevisions={};this.memory.clear();this.flights.clear();this.queued.clear();}
+    const key=JSON.stringify([scope,'summary-v1',who,days]),revision=JSON.stringify([this.summaryRevision||0,who==='me'?days.map(d=>this.dayRevision(d)):[]]),epoch=this.epoch;
     const row=await this.stored(key),ttl=days.includes(dayKey(Date.now()))?20000:300000;
+    if(scope!==this.scope()||epoch!==this.epoch)throw new Error('账号已切换');
     const refresh=()=>{
       if(this.flights.has(key))return this.flights.get(key);
       const job=Promise.resolve().then(load).then(async value=>{
         if(scope!==this.scope()||epoch!==this.epoch)throw new Error('账号已切换');
         const bytes=new TextEncoder().encode(JSON.stringify(value)).byteLength;
-        if(!value.fetch?.truncated&&!value.fetch?.failed&&bytes<=2*1024*1024&&revision===(this.summaryRevision||0)){
+        if(!value.fetch?.truncated&&!value.fetch?.failed&&bytes<=2*1024*1024&&revision===JSON.stringify([this.summaryRevision||0,who==='me'?days.map(d=>this.dayRevision(d)):[]])){
           const next={key,value,bytes,scope,revision,at:Date.now(),used:Date.now()};
           this.remember(next);await this.transaction('readwrite',s=>s.put(next));this.schedulePrune();
         }
@@ -7850,18 +7856,25 @@ const FeatureCache={
     const epoch=this.epoch;
     setTimeout(()=>{const run=()=>{if(epoch!==this.epoch||!AppAuth.current())return;
       if(document.hidden||navigator.onLine===false||navigator.connection?.saveData||/2g/.test(navigator.connection?.effectiveType||'')){this.idle(fn,15000);return;}
-      if(document.getElementById('boot-splash')?.classList.contains('is-on')||Wait.el||AppUI.page!=='home'||!MapX.maps.home?._loaded||MapX.maps.home._pmGestureActive||MapTileQueue.urgent()||this.flights.size){this.idle(fn,1800);return;}Promise.resolve().then(fn).catch(()=>{});};
+      const map=MapX.maps[AppUI.page==='history'?'hist':AppUI.page==='replay'?'replay':'home'];
+      if(document.getElementById('boot-splash')?.classList.contains('is-on')||Wait.el||AppUI.page==='auth'||AppUI.page==='replay'&&!ReplayTrack._paused||!map?._loaded||map._pmGestureActive||map._pmCamera||map._pmWheel||map.dragging?.moving()||MapTileQueue.urgent()||this.flights.size||this._idleJob){this.idle(fn,1800);return;}
+      const job=this._idleJob={epoch};Promise.resolve().then(fn).catch(()=>{}).finally(()=>{if(this._idleJob===job)this._idleJob=null;});};
       if(window.requestIdleCallback)requestIdleCallback(run,{timeout:1500});else run();},delay);
   },
   warm(){
-    if(!AppAuth.current()||this._warming===this.scope())return;
-    if(this.scope()!==this._scope){this.epoch++;this._scope=this.scope();this.memory.clear();this.flights.clear();this.queued.clear();}this._warming=this.scope();
-    const epoch=this.epoch,jobs=[];for(let n=0;n<7;n++){const d=new Date();d.setDate(d.getDate()-n);jobs.push(['me',dayKey(+d),2000]);}
-    const yesterday=new Date();yesterday.setDate(yesterday.getDate()-1);jobs.push(['me',dayKey(+yesterday),20000]);
-    if(Ping.cachedMate())jobs.push(['partner',dayKey(+yesterday),20000]);
-    const next=()=>{if(epoch!==this.epoch||!jobs.length)return;const [who,day,limit]=jobs.shift(),r=TrackData.range(day);return Ping.points(who,r.from,r.to,limit).catch(()=>{}).then(()=>{if(jobs.length)this.idle(next,1800);else this.idle(()=>{const d=new Date();d.setDate(d.getDate()-6);return History.fetchByDay(History.dayList(+d,Date.now()).reverse());},1800);});};this.idle(next,3500);
+    const stamp=this.scope()+'@'+dayKey(Date.now());
+    if(!AppAuth.current()||this._warming===stamp&&Date.now()-this._warmAt<300000)return;
+    if(this.scope()!==this._scope){this.epoch++;this._scope=this.scope();this._dayRevisions={};this.memory.clear();this.flights.clear();this.queued.clear();}this._warming=stamp;this._warmAt=Date.now();
+    const epoch=this.epoch,seq=this._warmSeq=(this._warmSeq||0)+1,jobs=[],days=[],people=Ping.cachedMate()?['me','partner']:['me'];
+    for(let n=0;n<=7;n++){const d=new Date();d.setDate(d.getDate()-n);const day=dayKey(+d);days.push(day);for(const who of people)jobs.push([who,day]);}
+    const next=()=>{if(epoch!==this.epoch||seq!==this._warmSeq||!jobs.length)return;const [who,day]=jobs.shift(),r=TrackData.range(day);return Ping.points(who,r.from,r.to,20000).catch(()=>{}).then(()=>{if(jobs.length)this.idle(next,450);else for(const person of people)this.idle(()=>History.fetchByDay(days,null,person),450);});};this.idle(next,1500);
   },
-  clear(){this.epoch++;this._scope='';this._warming='';this.memory.clear();this.flights.clear();this.queued.clear();return this.transaction('readwrite',s=>s.clear());},
+  hint(who,day){
+    const epoch=this.epoch,seq=this._hintSeq=(this._hintSeq||0)+1,jobs=[];
+    for(const n of [0,-1,1]){const d=new Date(day+'T12:00:00');d.setDate(d.getDate()+n);if(+d<=Date.now()||dayKey(+d)===dayKey(Date.now()))jobs.push(dayKey(+d));}
+    const next=()=>{if(epoch!==this.epoch||seq!==this._hintSeq||!jobs.length)return;const r=TrackData.range(jobs.shift());return Ping.points(who,r.from,r.to,20000).catch(()=>{}).then(()=>{if(jobs.length)this.idle(next,450);});};this.idle(next,450);
+  },
+  clear(){this.epoch++;this._scope='';this._warming='';this._dayRevisions={};this._idleJob=null;this.memory.clear();this.flights.clear();this.queued.clear();return this.transaction('readwrite',s=>s.clear());},
 };
 const RoutePhotos = {
   enabled:false, state:null, generation:0, privacyEpoch:0, thumbs:new Map(), pending:new Map(), imported:new Map(), cache:new Map(), imageJobs:[], imageActive:0,
@@ -8981,7 +8994,7 @@ const AppKeep = {
       Ping.savePending(owner,rows);
       if(AppAuth.current()?.user!==owner)return [];
       if(durable&&points.length)await p.acknowledge({owner,ids:points.map(p=>p.id)});
-      if(points.length){TrackData._cache={};FeatureCache.invalidateSummaries();Ping.flushPoints();}
+      if(points.length){TrackData.invalidate(points);Ping.flushPoints();}
       if(durable&&points.length===1000)setTimeout(()=>this.drain(),30);
       return points.filter(p=>p.source!=='health'&&p.accuracy>=0&&p.accuracy<=120).sort((a,b)=>a.time-b.time).slice(-1);
     })();this._recovering=job;
@@ -9517,7 +9530,7 @@ const Ping = {
     if(!rows.some(q=>q.ts===ts&&q.lat===p.lat&&q.lng===p.lng))rows.push({...p,ts});
     try{this.savePending(user,rows);}catch(e){return Promise.reject(e);}
     // Store first: failed RPCs and UI navigation cannot discard the sample.
-    TrackData._cache={};FeatureCache.invalidateSummaries();this.flushPoints();return Promise.resolve({ok:true,pending:true});
+    TrackData.invalidate([p]);this.flushPoints();return Promise.resolve({ok:true,pending:true});
   },
   pending(user=AppAuth.current()?.user){const rows=user?Store.get('trackPending.'+user,[]):[];return Array.isArray(rows)?rows:[];},
   savePending(user,rows){
@@ -9555,10 +9568,13 @@ const Ping = {
   live(){ return this.rpc('ping_live'); },
   me(){ return this.rpc('ping_me'); },
   async points(who, from, to, limit, options){
+    const requested=limit||20000,range=from&&TrackData.range(dayKey(+new Date(from)));
+    const count=range&&range.from===+new Date(from)&&range.to===+new Date(to)?20000:requested;
     const local=who==='me'?this.pending().filter(p=>(!from||Date.parse(p.ts)>=new Date(from).getTime())&&(!to||Date.parse(p.ts)<=new Date(to).getTime())):[];
     let res;
-    try{res=await FeatureCache.read(who,from,to,limit||20000,()=>this.rpc('ping_points',{p_who:who,p_from:from?new Date(from).toISOString():null,p_to:to?new Date(to).toISOString():null,p_limit:limit||20000}),options);}
+    try{res=await FeatureCache.read(who,from,to,count,()=>this.rpc('ping_points',{p_who:who,p_from:from?new Date(from).toISOString():null,p_to:to?new Date(to).toISOString():null,p_limit:count}),options);}
     catch(e){if(!local.length)throw e;res={ok:true,list:[],localPending:true};}
+    if(count>requested&&res?.list)res={...res,list:res.list.slice(-requested)};
     if(!local.length)return res;
     const list=[...(res.list||[]),...local],seen=new Set();
     return {...res,list:list.filter(p=>{const k=new Date(p.ts).getTime()+':'+p.lat+':'+p.lng;if(seen.has(k))return false;seen.add(k);return true;}).sort((a,b)=>new Date(a.ts)-new Date(b.ts))};
@@ -11639,13 +11655,13 @@ const Home = {
     if(this._trackBusy){this._trackQueued=true;return;}
     this._trackBusy=true; const epoch=this._epoch,scope=FeatureCache.scope?.();
     const day=dayKey(Date.now());
-    const cached=TrackData._cache['me@'+day];
+    const cached=TrackData.get('me',day);
     if(this._trackDay!==day){this.trackAnalysis=null;this.track=[];this._trackDay=day;}
-    if(cached?.pts?.length){this.trackAnalysis=analyzeTrack(cached.pts);this.track=this.trackAnalysis.points;this.drawTrack();}
+    if(cached?.pts?.length){this.trackAnalysis=cached.analysis||analyzeTrack(cached.pts);this.track=this.trackAnalysis.points;this.drawTrack();}
     try{
       const range=TrackData.range(day);
       const valid=()=>epoch===this._epoch&&day===dayKey(Date.now())&&(scope==null||scope===FeatureCache.scope());
-      const paint=res=>{this.trackAnalysis=analyzeTrack(res.list||[]);this.track=this.trackAnalysis.points;TrackData.remember('me@'+day,res.list||[]);this.drawTrack();};
+      const paint=res=>{this.trackAnalysis=analyzeTrack(res.list||[]);this.track=this.trackAnalysis.points;TrackData.remember('me@'+day,res.list||[],this.trackAnalysis);this.drawTrack();};
       const res=await Ping.points('me',range.from,range.to,20000);
       if(!valid())return;
       paint(res);
@@ -12025,7 +12041,9 @@ const PAGES = {
 // Data and calendar utilities shared by replay/history; no daily-track page.
 const TrackData = {
   _cache:{},
-  remember(key,pts){delete this._cache[key];this._cache[key]={pts,at:Date.now()};const keys=Object.keys(this._cache);while(keys.length>12)delete this._cache[keys.shift()];},
+  remember(key,pts,analysis){delete this._cache[key];const day=key.split('@')[1];this._cache[key]={pts,analysis,scope:FeatureCache.scope(),revision:FeatureCache.dayRevision(day),at:Date.now()};const keys=Object.keys(this._cache);let count=keys.reduce((n,k)=>n+this._cache[k].pts.length,0);while(keys.length>12||count>24000){const k=keys.shift();count-=this._cache[k].pts.length;delete this._cache[k];}},
+  get(who,day){const hit=this._cache[who+'@'+day];return hit&&hit.scope===FeatureCache.scope()&&(who!=='me'||hit.revision===FeatureCache.dayRevision(day))&&Date.now()-hit.at<FeatureCache.ttl(this.range(day).to)?hit:null;},
+  invalidate(points){const days=[...new Set(points.map(p=>+new Date(p.ts??p.time)).filter(Number.isFinite).map(dayKey))];for(const day of days)delete this._cache['me@'+day];FeatureCache.invalidateSummaries(days);},
   range(k){
     const start=new Date(k+'T00:00:00'),end=new Date(start);end.setDate(end.getDate()+1);
     return {from:+start,to:+end};
@@ -12235,12 +12253,12 @@ const ReplayTrack = {
     RoutePhotos.detach();this._pts=[];this._photoAnalysis=null;this._photoAt=+new Date(this.day+'T00:00:00');
     this._tl = null;
     this._setProgress(0);
-    const w = Wait.show('正在准备轨迹复现…');
+    const w = Wait.defer('正在准备轨迹复现…');
     try{
       w.set(0.1);
       let pts = null;
-      const hit = TrackData._cache[this.who + '@' + this.day];
-      if(hit && hit.pts && hit.pts.length && (this.day!==dayKey(Date.now())||Date.now()-hit.at<60000)){
+      const hit = TrackData.get(this.who,this.day);
+      if(hit && hit.pts && hit.pts.length){
         pts = hit.pts;
       } else {
         const r = TrackData.range(this.day);
@@ -12256,12 +12274,12 @@ const ReplayTrack = {
         return;
       }
       w.set(0.55);
-      const a = analyzeTrack(pts);
+      const a = hit?.analysis || analyzeTrack(pts);
       pts=a.points || pts;
-      TrackData.remember(this.who+'@'+this.day,pts);
+      TrackData.remember(this.who+'@'+this.day,pts,a);
       this._pts = pts;this._photoAnalysis=a;RoutePhotos.attach('replay');
       this._totalDist = a.dist;
-      try{ await Promise.race([MapX.warmReplay(pts,()=>seq===this._runSeq&&!this._cancel),sleep(1600)]); }catch(e){}
+      MapX.warmReplay(pts,()=>seq===this._runSeq&&!this._cancel).catch(()=>{});
       if(seq !== this._runSeq){w.hide();return;}
       this._follow=true;
       this._rejoining=false;
@@ -12287,6 +12305,7 @@ const ReplayTrack = {
       await w.finish();
       w.hide();
       this._bindProgress();
+      FeatureCache.hint(this.who,this.day);
       await this.play(a, pts, seq);
     }catch(e){
       try{ w.hide(); }catch(_){}
@@ -12704,13 +12723,37 @@ const History = {
     return Math.max(this.BUDGET_MIN, Math.min(dayMs, left));
   },
   async fetchByDay(days,onStep,who='me',onSnapshot){
+    const scope=FeatureCache.scope();
     const snapshot=await FeatureCache.summary(days,async()=>{
       const result=await this.fetchDaysFresh(days,onStep,who),byDay=result.byDay,analysis={};
-      for(const k of Object.keys(byDay))analysis[k]=analyzeTrack(byDay[k]);
+      let started=performance.now();
+      for(const k of Object.keys(byDay)){
+        if(scope!==FeatureCache.scope())throw new Error('账号已切换');
+        analysis[k]=analyzeTrack(byDay[k]);
+        if(performance.now()-started>5){await sleep(0);started=performance.now();}
+      }
       return {byDay,analysis,fetch:result.fetch};
     },who);
+    const epoch=FeatureCache.epoch;
+    if(scope!==FeatureCache.scope())throw new Error('账号已切换');
+    await this.prepare(snapshot);
+    if(scope!==FeatureCache.scope()||epoch!==FeatureCache.epoch)throw new Error('账号已切换');
     if(onSnapshot)onSnapshot(snapshot);
+    for(const day of Object.keys(snapshot.byDay).sort())TrackData.remember(who+'@'+day,snapshot.byDay[day],snapshot.analysis?.[day]);
     return snapshot.byDay;
+  },
+  async prepare(snapshot){
+    this._layouts=this._layouts||new WeakMap();
+    if(this._layouts.has(snapshot))return this._layouts.get(snapshot);
+    const scope=FeatureCache.scope(),epoch=FeatureCache.epoch,layout={},hash=this._hash();let started=performance.now();
+    for(const k of Object.keys(snapshot.byDay).sort().reverse()){
+      const paths=(snapshot.analysis[k].paths||[]).map(points=>MapX.simplify(points,900,5e-5)),runs=[];
+      for(const points of paths){let run=[];for(const p of points){if(hash.near(p.lat,p.lng)){if(run.length>1)runs.push(run);run=[];}else run.push(p);}if(run.length>1)runs.push(run);}
+      paths.flat().forEach(p=>hash.put(p.lat,p.lng));layout[k]=runs;
+      if(performance.now()-started>5){await sleep(0);started=performance.now();}
+      if(scope!==FeatureCache.scope()||epoch!==FeatureCache.epoch)throw new Error('账号已切换');
+    }
+    this._layouts.set(snapshot,layout);return layout;
   },
   async fetchDaysFresh(days, onStep,who='me'){
     const fresh=this._refreshing===true;
@@ -12772,9 +12815,7 @@ const History = {
     const legend = document.getElementById('hist-legend');
     const m = MapX.maps['hist'];
     if(!m) return;
-    let waiting=null,progress=0;
-    const waitTimer=setTimeout(()=>{if(seq===this._seq){waiting=Wait.show('正在汇总历史轨迹…');waiting.set(progress);}},180);
-    const w={set(v){progress=v;waiting?.set(v);},async finish(){clearTimeout(waitTimer);if(waiting)await waiting.finish();},hide(){clearTimeout(waitTimer);waiting?.hide();}};
+    const w=Wait.defer('正在汇总历史轨迹…');
     try{
       w.set(0.05);
       const win = this.window();
@@ -12788,22 +12829,15 @@ const History = {
       (this._lines || []).forEach(l => { try{ m.removeLayer(l); }catch(e){} });
       this._lines = [];
       this._byDayLines = {};
-      const hash = this._hash();
+      const layout = await this.prepare(snapshot);
+      if(seq!==this._seq||scope!==FeatureCache.scope())return;
       const rows = [];
       const all = [];this._fogData=[];
       days.forEach((k, di) => {
         const dayAnalysis=this._analysis?.[k]||analyzeTrack(byDay[k]),dayPts=dayAnalysis.points;
         dayPts.forEach(p => all.push(p));
         this._fogData.push({key:k,paths:dayAnalysis.paths||[],points:dayPts});
-        /* 抽稀后逐点判定：重合段不画（让位融合），跨界段照画 */
-        const drawPaths=(dayAnalysis.paths||[]).map(points=>MapX.simplify(points,900,5e-5)),simp=drawPaths.flat();
-        const runs = [];
-        let run = [];
-        drawPaths.forEach(points=>{
-          run=[];
-          points.forEach(p=>{if(hash.near(p.lat,p.lng)){if(run.length>1)runs.push(run);run=[];}else run.push(p);});
-          if(run.length>1)runs.push(run);
-        });
+        const runs = layout[k];
         const color = this.colorOf(di);
         const mine = [];
         runs.forEach(r => {
@@ -12823,7 +12857,6 @@ const History = {
           mine.push(line);
         });
         this._byDayLines[k] = mine;
-        simp.forEach(p => hash.put(p.lat, p.lng));
         rows.push({ k: k, color: color, n: dayPts.length, kept: runs.reduce((a, b2) => a + b2.length, 0), pts: dayPts });
       });
       w.set(0.85);
@@ -12845,6 +12878,7 @@ const History = {
       }
       await w.finish();
       w.hide();
+      FeatureCache.hint(who,keys[0]);
       if(status && days.length){
         const lf = this.lastFetch || null;
         /* 总闸截断时**如实说明**：不是「这段时间没有轨迹」，而是「这次没取完」 */
@@ -14460,6 +14494,12 @@ const Wait = {
   el: null,
   bar: null,
   prog: null,
+
+  defer(text,delay=180){
+    let waiting=null,progress=0,closed=false;
+    const timer=setTimeout(()=>{if(!closed){waiting=this.show(text);waiting.set(progress);}},delay);
+    return {set(v){progress=v;waiting?.set(v);},async finish(){clearTimeout(timer);if(waiting)await waiting.finish();},hide(){closed=true;clearTimeout(timer);waiting?.hide();}};
+  },
 
   show(text){
     if(this.el) this.hide();

@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>同屏 Ping · 可视化实测</title>
+<link rel="stylesheet" href="lab.css">
+<body>
+<header class="lab-header"><a href="../index.html#/home">返回正常网页版</a><h1>同屏 Ping · 可视化实测</h1><p>演示数据，不连接账号或云端。系统授权为模拟弹窗流程。</p></header>
+<main>
+ <aside>
+  <details open><summary>选择测试场景</summary><nav aria-label="测试场景">
+   <button data-scene="splash">开屏屏幕</button><button data-scene="new">首次滑动引导</button><button data-scene="login">登录界面</button>
+   <button data-scene="home">主地图与实时点</button><button data-scene="history">历史轨迹</button><button data-scene="replay">轨迹复现</button>
+   <button data-scene="fog">迷雾地图</button><button data-scene="photos">沿线照片</button><button data-scene="activity">Ta 的活动</button>
+   <button data-scene="theme">外观皮肤</button><button data-scene="mate">守护</button><button data-scene="settings">记录与分享设置</button>
+  </nav></details>
+  <section class="lab-help"><h2>怎样测试</h2><p>引导页左右滑动，或点击继续；授权操作使用模拟响应，不会申请设备权限。</p><p>演示账号 <b>demo-ping</b><br>演示口令 <b>ping-demo</b></p><p>已注入两个人近 14 天的轨迹、手机状态和示例照片。可切换日期、拖动进度条、点实时点或更换皮肤。</p><p>灰绿底图为合成地图，用于观察轨迹与界面，不代表真实地理位置。</p></section>
+  <button id="lab-expand" type="button">放大体验区</button><button id="lab-reset" type="button">重置演示数据</button>
+ </aside>
+ <section class="lab-device"><div class="lab-caption"><strong>隔离演示</strong><span id="lab-status" role="status">正在准备开屏…</span></div><iframe id="lab-frame" title="同屏 Ping 隔离演示" sandbox="allow-scripts" referrerpolicy="no-referrer"></iframe></section>
+</main>
+<script src="lab.js"></script>
+</body></html>

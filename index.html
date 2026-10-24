@@ -8154,7 +8154,8 @@ const SharedJournal = {
   },
   pair(data,partner=this.partner()){
     if(!partner)return null;
-    const p=data.pairs[partner]||(data.pairs[partner]={cursor:0,remote:{},sent:{}});p.keys=p.keys||{};return p;
+    if(!Object.prototype.hasOwnProperty.call(data.pairs,partner))Object.defineProperty(data.pairs,partner,{value:{cursor:0,remote:{},sent:{}},enumerable:true,writable:true,configurable:true});
+    const p=data.pairs[partner];p.keys=p.keys||{};return p;
   },
   id(){return crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+'-'+Math.random().toString(36).slice(2);},
   clean(r){
@@ -8255,7 +8256,7 @@ const SharedJournal = {
         remoteActivities.slice(2000).forEach(r=>delete p.remote[r.id]);
         const latest=this.load();
         for(const r of incomingOwn){const local=latest.records[r.id];if(!local||p.ownSeen?.[r.id]===local.rev){latest.records[r.id]=r;(p.ownSeen||(p.ownSeen={}))[r.id]=r.rev;}}
-        latest.pairs[mate]=p;this.persist(latest);changed=changed||messages.length>0;
+        Object.defineProperty(latest.pairs,mate,{value:p,enumerable:true,writable:true,configurable:true});this.persist(latest);changed=changed||messages.length>0;
         if(messages.length<300)break;
       }
       d=this.load();p=this.pair(d,mate);
@@ -8352,7 +8353,7 @@ const BillImport={
     if(!file||file.size>5*1024*1024)throw Error('请选择不超过 5 MB 的账单');
     const bytes=await file.arrayBuffer();let rows;
     if(/\.xlsx$/i.test(file.name)){
-      await Ledger.library('xlsx','vendor/xlsx.js');
+      await Ledger.library('XLSX','vendor/xlsx.js');
       const workbook=XLSX.read(bytes,{type:'array',cellDates:false,sheetRows:10002});
       rows=XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]],{header:1,raw:false,defval:''});
     }else if(/\.csv$/i.test(file.name)){
@@ -8436,7 +8437,7 @@ const Ledger={
     }catch(e){toast(e.message,'err');}
   },
   exportCSV(){
-    const safe=value=>{let s=String(value??'');if(/^[=+\-@\t\r]/.test(s))s="'"+s;return '"'+s.replace(/"/g,'""')+'"';};
+    const safe=value=>{let s=String(value??'');if(/^\s*[=+\-@]|^[\t\r\n]/.test(s))s="'"+s;return '"'+s.replace(/"/g,'""')+'"';};
     const rows=[['时间','人物','类型','金额(元)','分类','商户','备注','来源'],...this.rows().map(r=>[new Date(r.at).toLocaleString('zh-CN'),r.own?'我':'伙伴',r.direction,(r.cents/100).toFixed(2),r.category,r.title,r.note,r.source])];
     const url=URL.createObjectURL(new Blob(['\uFEFF'+rows.map(r=>r.map(safe).join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'})),a=document.createElement('a');a.href=url;a.download='同屏Ping-账本-'+this.month+'.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),30000);
   }
@@ -8488,8 +8489,23 @@ const ActivityHub={
     openModal('<h2>语音小记</h2><p>点击开始后使用麦克风与系统语音识别，最多 30 秒。系统可能联网处理音频；确认文字后才会保存记录。</p><button class="btn btn-primary" onclick="ActivityHub.startDictation()">开始说话</button><button class="btn" onclick="AppUI.closeModal()">取消</button>');
   },
   async startDictation(){
-    const u=SharedJournal.user();openModal('<h2>正在聆听…</h2><p role="status">说完后点击完成，或等待自动结束。</p><button class="btn btn-primary" onclick="Capacitor.Plugins.AppDevice.stopDictation()">完成</button>');
-    try{const r=await window.Capacitor.Plugins.AppDevice.dictate();if(SharedJournal.user()===u)this.note(r.text||'');}catch(e){AppUI.closeModal();toast('未获取到语音文字，请检查麦克风及语音识别权限','err');}
+    const u=SharedJournal.user(),epoch=(this.voiceEpoch||0)+1;this.voiceEpoch=epoch;
+    openModal('<div class="activity-listening"><h2>正在聆听…</h2><p role="status">说完后点击完成，或等待自动结束。</p><button class="btn btn-primary" onclick="Capacitor.Plugins.AppDevice.stopDictation()">完成</button></div>');
+    this.voiceObserver?.disconnect();
+    this.voiceObserver=new MutationObserver(()=>{if(!document.querySelector('.activity-listening'))this.cancelDictation();});
+    this.voiceObserver.observe(document.getElementById('modal-root'),{childList:true,subtree:true});
+    this.dictating=true;
+    try{
+      const r=await window.Capacitor.Plugins.AppDevice.dictate();
+      if(this.voiceEpoch!==epoch)return;
+      this.dictating=false;this.voiceObserver.disconnect();
+      if(SharedJournal.user()===u&&!document.hidden&&AppUI.page==='activity')this.note(r.text||'');
+    }catch(e){if(this.voiceEpoch===epoch){this.dictating=false;this.voiceObserver.disconnect();AppUI.closeModal();toast('未获取到语音文字，请检查麦克风及语音识别权限','err');}}
+  },
+  cancelDictation(){
+    if(!this.dictating)return;
+    this.dictating=false;this.voiceEpoch++;this.voiceObserver?.disconnect();
+    window.Capacitor?.Plugins?.AppDevice?.stopDictation?.().catch(()=>{});
   },
   async music(){
     const p=window.Capacitor?.Plugins?.AppDevice;if(!p?.musicAuthorize){toast('系统音乐记录需要 iOS 安装版');return;}
@@ -8498,9 +8514,9 @@ const ActivityHub={
     }catch(e){toast('暂时无法读取系统音乐','err');}
   },
   install(){
-    Object.assign(PAGES,{activity:{label:'Ta 的活动',icon:'phone',nav:false,render(){ActivityHub.render();},close(){ActivityHub.epoch++;}},ledger:{label:'小记账',icon:'wallet',nav:false,render(){Ledger.render();}}});
+    Object.assign(PAGES,{activity:{label:'Ta 的活动',icon:'phone',nav:false,render(){ActivityHub.render();},close(){ActivityHub.epoch++;ActivityHub.cancelDictation();}},ledger:{label:'小记账',icon:'wallet',nav:false,render(){Ledger.render();}}});
     window.addEventListener('journalchange',()=>{if(AppUI.page==='ledger')Ledger.paint();if(AppUI.page==='activity')ActivityHub.paint();});
-    document.addEventListener('visibilitychange',()=>{if(document.hidden)window.Capacitor?.Plugins?.AppDevice?.stopDictation?.().catch(()=>{});else if(AppAuth.current()){SharedJournal.nativeDrain().catch(()=>{});SharedJournal.sync();}});
+    document.addEventListener('visibilitychange',()=>{if(document.hidden)ActivityHub.cancelDictation();else if(AppAuth.current()){SharedJournal.nativeDrain().catch(()=>{});SharedJournal.sync();}});
     window.addEventListener('online',()=>SharedJournal.kick());
   }
 };
@@ -8528,7 +8544,7 @@ const PermissionWelcome={
   paint(message=''){
     const el=document.getElementById('permission-welcome'),s=this.steps[this.index];
     el.innerHTML=`<header><b>同屏 Ping</b><span>${this.index+1} / ${this.steps.length}</span></header><div class="permission-slide"><div class="permission-art">${this.drawing(s)}</div><h1 tabindex="-1">${s.title}</h1><p>${s.body}</p><p class="permission-message" role="status">${esc(message)}</p></div><footer><div class="permission-dots" aria-label="第 ${this.index+1} 步">${this.steps.map((_,i)=>`<i class="${i===this.index?'active':''}"></i>`).join('')}</div><button class="btn btn-primary" ${this.busy?'disabled':''} onclick="PermissionWelcome.request()">${this.busy?'等待系统授权…':s.action}</button>${this.index<this.steps.length-1?`<button class="btn" onclick="PermissionWelcome.next()">稍后设置，继续</button>`:''}${this.index?'<button class="permission-back" onclick="PermissionWelcome.back()">上一步</button>':''}</footer>`;
-    el.querySelector('h1').focus({preventScroll:true});
+    el.scrollTop=0;el.querySelector('h1').focus({preventScroll:true});
   },
   back(){this.epoch++;this.busy=false;this.index=Math.max(0,this.index-1);this.paint();},
   next(){this.epoch++;this.busy=false;if(this.index<this.steps.length-1){this.index++;this.paint();}else this.done();},

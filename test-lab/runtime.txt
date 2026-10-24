@@ -7995,7 +7995,7 @@ const FogBuildings={
         this.tiles.delete(key);this.tiles.set(key,tile);let bytes=0;for(const t of this.tiles.values())bytes+=t.bytes;
         while(this.tiles.size>this.MAX_TILES||bytes>this.MAX_BYTES){const old=this.tiles.keys().next().value;bytes-=this.tiles.get(old).bytes;this.tiles.delete(old);}
         this.select();
-      }).catch(()=>{(this.failed||(this.failed=new Map())).set(key,Date.now()+60000);while(this.failed.size>96)this.failed.delete(this.failed.keys().next().value);})
+      }).catch(error=>{if(seq!==this.seq||error?.name==='AbortError')return;(this.failed||(this.failed=new Map())).set(key,Date.now()+60000);while(this.failed.size>96)this.failed.delete(this.failed.keys().next().value);})
         .finally(()=>{this.active--;this.loading.delete(key);if(seq===this.seq)this.drain();else if(this.alive())this.schedule();});
     }
   },

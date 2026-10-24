@@ -8555,9 +8555,13 @@ const PermissionWelcome={
     try{
       if(key==='network'){
         if(navigator.onLine===false)throw Error('当前离线，你可以稍后联网。');
-        // Same-origin / configured backend only; no local-network discovery probe.
-        const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),8000);
-        try{const base=Supa.cfg?.url||location.href.split('#')[0];const r=await fetch(base,{method:'HEAD',signal:controller.signal,cache:'no-store'});if(!r.ok&&r.status!==401&&r.status!==404)throw Error('网络尚未连通');}finally{clearTimeout(timer);}
+        // Use the existing public health RPC, including native transport fallback.
+        if(Supa.active()){
+          const result=await Supa.rpc('sl_ping',{});if(!result?.ok)throw Error('网络尚未连通，可以稍后设置。');
+        }else{
+          const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),8000);
+          try{const r=await fetch(location.href.split('#')[0],{method:'HEAD',signal:controller.signal,cache:'no-store'});if(!r.ok)throw Error('网络尚未连通');}finally{clearTimeout(timer);}
+        }
       }else if(key==='location'||key==='always'){
         const p=plugins.AppKeep;
         if(!p){if(key==='always')throw Error('浏览器不支持后台定位，iOS 安装版可设置。');await new Promise((resolve,reject)=>navigator.geolocation?navigator.geolocation.getCurrentPosition(resolve,reject,{timeout:15000}):reject(Error('浏览器不支持定位')));}

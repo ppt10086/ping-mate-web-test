@@ -7958,7 +7958,7 @@ const FogBuildings={
   },
   close(){
     this.seq++;clearTimeout(this.timer);this.timer=0;this.controllers.forEach(c=>c.abort());this.controllers.clear();
-    this.credit?.remove();this.credit=null;this.fog=null;this.queue=[];this.wanted=new Set();this.requested=new Set();this.lit=new Set();this.parts=[];this._selectSeq=(this._selectSeq||0)+1;
+    this.credit?.remove();this.credit=null;this.fog=null;this._cellSource=null;this._cellSize=0;this.visited=null;this.queue=[];this.wanted=new Set();this.requested=new Set();this.lit=new Set();this.parts=[];this._selectSeq=(this._selectSeq||0)+1;
   },
   schedule(){clearTimeout(this.timer);if(this.alive())this.timer=setTimeout(()=>this.viewport(),350);},
   viewport(){

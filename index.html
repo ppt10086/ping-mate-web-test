@@ -7970,7 +7970,7 @@ const FogArchive={
     for(const y of [...rows.keys()].sort((a,b)=>a-b)){const xs=rows.get(y).sort((a,b)=>a-b);let a=xs[0],b=a;for(let i=1;i<=xs.length;i++){if(xs[i]===b+1)b=xs[i];else{out.push(y,a,b-a+1);a=b=xs[i];}}}return out;
   },
   unpack(runs,cells,day){for(let i=0;i<runs.length;i+=3)for(let x=runs[i+1];x<runs[i+1]+runs[i+2];x++){if(cells.size>=Fog.MAX_CELLS)return;const key=x+','+runs[i];if(!cells.has(key))cells.set(key,day);}},
-  async rows(who){const scope=FeatureCache.scope(),rows=await this.transaction('readonly',(s,set)=>{const r=s.getAll();r.onsuccess=()=>set(r.result);})||[],merged=new Map(rows.map(r=>[r.key,r]));for(const [key,row] of this.memory)merged.set(key,row);return [...merged.values()].filter(row=>{const k=JSON.parse(row.key);return row.scope===scope&&k[1]===this.VERSION&&k[2]==='day'&&k[3]===who;}).map(r=>r.value);},
+  async rows(who){const scope=FeatureCache.scope(),prefix=JSON.stringify([scope,this.VERSION,'day',who]).slice(0,-1)+',',rows=await this.transaction('readonly',(s,set)=>{const r=s.getAll(IDBKeyRange.bound(prefix,prefix+'\uffff'));r.onsuccess=()=>set(r.result);})||[],merged=new Map(rows.map(r=>[r.key,r]));for(const [key,row] of this.memory)merged.set(key,row);return [...merged.values()].filter(row=>{const k=JSON.parse(row.key);return row.scope===scope&&k[1]===this.VERSION&&k[2]==='day'&&k[3]===who;}).map(r=>r.value);},
   async snapshot(days,who,all=false){
     const scope=FeatureCache.scope(),known=all?await this.rows(who):await Promise.all(days.map(d=>this.get(this.key('day',who,d.key)).then(r=>r?.value))),cells=new Map();
     const sorted=known.filter(Boolean).sort((a,b)=>b.day.localeCompare(a.day));for(const row of sorted)this.unpack(row.runs,cells,row.day);
@@ -7980,7 +7980,7 @@ const FogArchive={
     return {cells:[...cells],parcels:parts,covered:saved.covered,center:sorted[0]?.center,truncated:known.some(r=>r?.truncated),revision:this.hash(JSON.stringify(this.pack(cells))+parts.map(p=>p.id).sort().join('|'))};
   },
   enqueue(days,who){const scope=FeatureCache.scope();if(!scope)return;for(const day of days)this.pending.set(this.key('day',who,day.key),{scope,who,day});this.dispatch();},
-  dispatch(){if(this.scheduled||this.running||!this.pending.size)return;this.scheduled=true;FeatureCache.idle(async()=>{this.scheduled=false;if(this.running)return;const entry=this.pending.entries().next().value;if(!entry)return;this.pending.delete(entry[0]);const job=this.running={epoch:this.epoch};try{await this.prepare(entry[1],job);}finally{if(this.running===job)this.running=null;this.dispatch();}},100);},
+  dispatch(){if(this.scheduled||this.running||!this.pending.size)return;this.scheduled=true;const epoch=this.epoch;FeatureCache.idle(async()=>{if(epoch!==this.epoch)return;this.scheduled=false;if(this.running)return;const entry=this.pending.entries().next().value;if(!entry)return;this.pending.delete(entry[0]);const job=this.running={epoch:this.epoch};try{await this.prepare(entry[1],job);}finally{if(this.running===job)this.running=null;this.dispatch();}},100);},
   async prepare({scope,who,day},job){
     const alive=()=>scope===FeatureCache.scope()&&job.epoch===this.epoch;
     if(!alive())return;const key=this.key('day',who,day.key),old=(await this.get(key))?.value,hash=this.fingerprint(day);
@@ -7995,7 +7995,7 @@ const FogArchive={
   notify(who){window.dispatchEvent(new CustomEvent('ping:fog-ready',{detail:{scope:FeatureCache.scope(),who}}));},
   dispatchRoads(){
     if(this.roadScheduled||this.roadRunning||!this.roadJobs?.size)return;this.roadScheduled=true;
-    const delay=Math.max(500,(this._retryAt||0)-Date.now());FeatureCache.idle(async()=>{this.roadScheduled=false;if(this.roadRunning)return;const entry=this.roadJobs.entries().next().value;if(!entry)return;this.roadJobs.delete(entry[0]);this.roadRunning=true;try{await this.roads(entry[1]);}catch(e){if(entry[1].scope===FeatureCache.scope()&&entry[1].epoch===this.epoch){this._retryAt=Date.now()+60000;this.roadJobs.set(entry[0],entry[1]);}}finally{this.roadRunning=false;this.dispatchRoads();}},delay);
+    const delay=Math.max(500,(this._retryAt||0)-Date.now()),epoch=this.epoch;FeatureCache.idle(async()=>{if(epoch!==this.epoch)return;this.roadScheduled=false;if(this.roadRunning)return;const entry=this.roadJobs.entries().next().value;if(!entry)return;this.roadJobs.delete(entry[0]);this.roadRunning=true;try{await this.roads(entry[1]);}catch(e){if(entry[1].scope===FeatureCache.scope()&&entry[1].epoch===this.epoch){this._retryAt=Date.now()+60000;this.roadJobs.set(entry[0],entry[1]);}}finally{this.roadRunning=false;this.dispatchRoads();}},delay);
   },
   async roads(job){
     const {who,scope}=job,alive=()=>scope===FeatureCache.scope()&&job.epoch===this.epoch&&!document.hidden;

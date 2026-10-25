@@ -8027,7 +8027,7 @@ window.addEventListener('ping:points-updated',event=>{const {scope,who,from,valu
 const FogReady={
   mask(){},error(){},
   async begin(map,days){
-    this._generation=Fog._generation;this._scope=FeatureCache.scope();this.who=History.who;this.days=days;this.all=!days.length&&History._loading===true;
+    this._generation=Fog._generation;this._scope=FeatureCache.scope();this.who=History.who;this.days=days;this.all=!History._only&&History.window().all===true;
     const generation=this._generation;this.key=JSON.stringify([this._scope,'fog-750-v3',this.who,days.map(d=>[d.key,FogArchive.fingerprint(d)])]);
     const row=await FogArchive.snapshot(days,this.who,this.all);if(generation!==Fog._generation||this._scope!==FeatureCache.scope())return [];
     this.snapshot=row;FogArchive.enqueue(days,this.who);return row?.cells||[];

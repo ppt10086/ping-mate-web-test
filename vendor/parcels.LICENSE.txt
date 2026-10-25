@@ -1,7 +1,6 @@
-Building geometry bundle: @mapbox/vector-tile 2.0.4, pbf 4.0.1, robust-point-in-polygon 1.0.3.
-Sources: https://github.com/mapbox/vector-tile-js ; https://github.com/mapbox/pbf ; https://github.com/mikolalysenko/robust-point-in-polygon
-Public data: OpenFreeMap / OpenMapTiles / OpenStreetMap contributors (ODbL). https://www.openstreetmap.org/copyright
-
+Road-block geometry bundle. @mapbox/vector-tile 2.0.4 / pbf 4.0.1 / robust-point-in-polygon 1.0.3 / clipper-lib 6.4.2.
+Sources: https://github.com/mapbox/vector-tile-js ; https://github.com/mapbox/pbf ; https://github.com/mikolalysenko/robust-point-in-polygon ; https://github.com/junmer/clipper-lib
+Public map data: OpenFreeMap / OpenMapTiles / OpenStreetMap contributors (ODbL). https://www.openstreetmap.org/copyright
 
 --- @mapbox/point-geometry 1.1.0 ISC ---
 Copyright (c) 2024, Mapbox
@@ -72,6 +71,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE
 
+
+--- clipper-lib 6.4.2 BSL ---
 
 --- pbf 4.0.1 BSD-3-Clause ---
 Copyright (c) 2024, Mapbox

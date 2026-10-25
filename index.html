@@ -7946,17 +7946,23 @@ const FeatureCache={
   clear(){this.epoch++;this._scope='';this._warming='';this._dayRevisions={};this._idleJob=null;this.memory.clear();this.flights.clear();this.queued.clear();return this.transaction('readwrite',s=>s.clear());},
 };
 const FogArchive={
-  DB:'pm-exploration',VERSION:'750-blocks-v3',pending:new Map(),epoch:0,
+  DB:'pm-exploration',VERSION:'750-blocks-v3',pending:new Map(),memory:new Map(),epoch:0,
   open(){
-    if(this._opening)return this._opening;
+    if(this.db)return Promise.resolve(this.db);if(this._opening)return this._opening;
     this._opening=new Promise(resolve=>{let r;try{r=indexedDB.open(this.DB,1);}catch(e){resolve(null);return;}
-      r.onupgradeneeded=()=>r.result.createObjectStore('computed',{keyPath:'key'});
-      r.onsuccess=()=>{this.db=r.result;this.db.onversionchange=()=>{this.db.close();this.db=null;this._opening=null;};resolve(this.db);};r.onerror=r.onblocked=()=>{this._opening=null;resolve(null);};
+      const timer=setTimeout(()=>resolve(null),1000);r.onupgradeneeded=()=>r.result.createObjectStore('computed',{keyPath:'key'});
+      r.onsuccess=()=>{clearTimeout(timer);this.db=r.result;this.db.onversionchange=()=>{this.db.close();this.db=null;this._opening=null;};resolve(this.db);};r.onerror=r.onblocked=()=>{clearTimeout(timer);resolve(null);};
     });return this._opening;
   },
   async transaction(mode,action){const db=await this.open();if(!db)return null;return new Promise(resolve=>{try{const tx=db.transaction('computed',mode);let result=null;action(tx.objectStore('computed'),v=>result=v);tx.oncomplete=()=>resolve(result);tx.onerror=tx.onabort=()=>resolve(null);}catch(e){resolve(null);}});},
-  get(key){return this.transaction('readonly',(s,set)=>{const r=s.get(key);r.onsuccess=()=>set(r.result||null);});},
-  put(key,value,scope=FeatureCache.scope()){if(!scope||scope!==FeatureCache.scope())return Promise.resolve(null);return this.transaction('readwrite',(s,set)=>{s.put({key,scope,value});set(true);});},
+  async get(key){return this.memory.get(key)||await this.transaction('readonly',(s,set)=>{const r=s.get(key);r.onsuccess=()=>set(r.result||null);});},
+  async put(key,value,scope=FeatureCache.scope()){
+    if(!scope||scope!==FeatureCache.scope())return null;const row={key,scope,value},saved=await this.transaction('readwrite',(s,set)=>{s.put(row);set(true);});
+    if(scope!==FeatureCache.scope())return null;if(saved){this.memory.delete(key);return true;}
+    // Storage-denied sessions remain usable; this bounded fallback cannot survive restart.
+    row.bytes=new TextEncoder().encode(JSON.stringify(row)).length;if(row.bytes>8*1024*1024)return null;this.memory.delete(key);this.memory.set(key,row);let bytes=[...this.memory.values()].reduce((n,r)=>n+r.bytes,0);
+    while(bytes>8*1024*1024&&this.memory.size>1){const first=this.memory.keys().next().value;bytes-=this.memory.get(first).bytes;this.memory.delete(first);}return true;
+  },
   key(kind,who,id=''){return JSON.stringify([FeatureCache.scope(),this.VERSION,kind,who,id]);},
   hash(value){let a=2166136261;for(const c of value){a^=c.charCodeAt(0);a=Math.imul(a,16777619);}return (a>>>0).toString(36);},
   fingerprint(day){return this.hash(JSON.stringify([day.key,day.paths.map(p=>p.map(v=>[v.lat,v.lng])),day.points.map(p=>[p.lat,p.lng])]));},
@@ -7964,7 +7970,7 @@ const FogArchive={
     for(const y of [...rows.keys()].sort((a,b)=>a-b)){const xs=rows.get(y).sort((a,b)=>a-b);let a=xs[0],b=a;for(let i=1;i<=xs.length;i++){if(xs[i]===b+1)b=xs[i];else{out.push(y,a,b-a+1);a=b=xs[i];}}}return out;
   },
   unpack(runs,cells,day){for(let i=0;i<runs.length;i+=3)for(let x=runs[i+1];x<runs[i+1]+runs[i+2];x++){if(cells.size>=Fog.MAX_CELLS)return;const key=x+','+runs[i];if(!cells.has(key))cells.set(key,day);}},
-  async rows(who){const scope=FeatureCache.scope();return await this.transaction('readonly',(s,set)=>{const r=s.getAll();r.onsuccess=()=>set(r.result.filter(row=>row.scope===scope&&JSON.parse(row.key)[2]==='day'&&JSON.parse(row.key)[3]===who).map(r=>r.value));})||[];},
+  async rows(who){const scope=FeatureCache.scope(),rows=await this.transaction('readonly',(s,set)=>{const r=s.getAll();r.onsuccess=()=>set(r.result);})||[],merged=new Map(rows.map(r=>[r.key,r]));for(const [key,row] of this.memory)merged.set(key,row);return [...merged.values()].filter(row=>{const k=JSON.parse(row.key);return row.scope===scope&&k[1]===this.VERSION&&k[2]==='day'&&k[3]===who;}).map(r=>r.value);},
   async snapshot(days,who,all=false){
     const scope=FeatureCache.scope(),known=all?await this.rows(who):await Promise.all(days.map(d=>this.get(this.key('day',who,d.key)).then(r=>r?.value))),cells=new Map();
     const sorted=known.filter(Boolean).sort((a,b)=>b.day.localeCompare(a.day));for(const row of sorted)this.unpack(row.runs,cells,row.day);
@@ -8015,7 +8021,7 @@ const FogArchive={
     navigator.storage?.persist?.().catch(()=>{});
   },
   stop(){this.epoch++;this.pending.clear();this.roadJobs?.clear();this.scheduled=false;this.roadScheduled=false;this._warmStamp='';this.context?.controllers.forEach(c=>c.abort());this.context?._computeCancel?.();FogDistrict._bgCancel?.();},
-  async clearOwner(user){this.stop();return this.transaction('readwrite',s=>{const r=s.openCursor();r.onsuccess=()=>{const c=r.result;if(!c)return;try{if(JSON.parse(c.value.scope)[0]===user)c.delete();}catch(e){}c.continue();};});}
+  async clearOwner(user){this.stop();for(const [key,row] of this.memory)if(JSON.parse(row.scope)[0]===user)this.memory.delete(key);return this.transaction('readwrite',s=>{const r=s.openCursor();r.onsuccess=()=>{const c=r.result;if(!c)return;try{if(JSON.parse(c.value.scope)[0]===user)c.delete();}catch(e){}c.continue();};});}
 };
 window.addEventListener('ping:points-updated',event=>{const {scope,who,from,value}=event.detail||{};if(scope!==FeatureCache.scope()||!from||!value?.list?.length||value.list.length>=20000)return;const grouped={};for(const p of value.list)(grouped[dayKey(Date.parse(p.ts))]||(grouped[dayKey(Date.parse(p.ts))]=[])).push(p);FogArchive.enqueue(Object.entries(grouped).map(([key,points])=>{const a=analyzeTrack(points);return {key,paths:a.paths||[],points:a.points};}),who);});
 const FogReady={
@@ -8058,8 +8064,8 @@ const FogDistrict={
   async group(province,level='district'){
     const key=level+':'+province;if(this.groups.has(key))return this.groups.get(key);
     const path=level==='district'?'districts/'+province+'.json':level==='city'?'regions/'+province+'.json':'regions/provinces.json';
-    const response=await fetch('assets/'+path,{credentials:'omit'});if(!response.ok)throw Error('administrative boundary');const list=await response.json();
-    if(!Array.isArray(list)||list.length>400)throw Error('administrative bounds');this.groups.set(key,list);while(this.groups.size>5)this.groups.delete(this.groups.keys().next().value);return list;
+    const pending=fetch('assets/'+path,{credentials:'omit'}).then(async response=>{if(!response.ok)throw Error('administrative boundary');const list=await response.json();if(!Array.isArray(list)||list.length>400)throw Error('administrative bounds');return list;});
+    this.groups.set(key,pending);while(this.groups.size>5)this.groups.delete(this.groups.keys().next().value);try{return await pending;}catch(e){if(this.groups.get(key)===pending)this.groups.delete(key);throw e;}
   },
   contains(feature,lng,lat){const g=feature.geometry,polys=g.type==='Polygon'?[g.coordinates]:g.coordinates;return polys.some(p=>PMParcels.classify(p[0],[lng,lat])<=0&&p.slice(1).every(h=>PMParcels.classify(h,[lng,lat])>0));},
   async find(level,lat,lng,valid=()=>true){
@@ -8086,7 +8092,7 @@ const FogDistrict={
   },
   async update(){
     clearTimeout(this.timer);const seq=++this._seq,generation=Fog._generation,scope=FeatureCache.scope(),map=Fog.map;if(!Fog.canvas||!map)return;this._cancel?.();
-    const level=this.levelFor(map.getZoom());if(!level){this.el?.classList.remove('visible');return;}
+    const level=this.levelFor(map.getZoom());if(!level){this.el?.classList.remove('visible');return;}if(this.current?.level!==level){this.current=null;this.result=null;this.el?.classList.remove('visible');}
     const valid=()=>seq===this._seq&&generation===Fog._generation&&scope===FeatureCache.scope()&&Fog.canvas&&Fog.map===map;
     const p=map.getCenter(),[lat,lng]=FogParcels.wgs(p.lat,p.lng);
     try{

@@ -1,0 +1,2 @@
+GaryBikini/ChinaAdminDivisonSHP, commit ae72417fee2a63f453e6b2717e40655e87e26887, v24.02.06. MIT. https://github.com/GaryBikini/ChinaAdminDivisonSHP
+Source GCJ-02 converted to WGS84 with existing Ping CRS inverse iteration. Topology-preserving simplification 0.0002 degrees. Administrative boundaries are a dated geographic approximation.

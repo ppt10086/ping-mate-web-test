@@ -8034,11 +8034,11 @@ const FogArchive={
 window.addEventListener('ping:points-updated',event=>{const {scope,who,from,value}=event.detail||{};if(scope!==FeatureCache.scope()||!from||!value?.list?.length||value.list.length>=20000)return;const grouped={};for(const p of value.list)(grouped[dayKey(Date.parse(p.ts))]||(grouped[dayKey(Date.parse(p.ts))]=[])).push(p);FogArchive.enqueue(Object.entries(grouped).map(([key,points])=>{const a=analyzeTrack(points);return {key,paths:a.paths||[],points:a.points};}),who);});
 // Reuse Leaflet's projected coordinates and padded canvas bounds; geometry stays in world space.
 const FogPainter={
-  Z:14,clear(){this.source=null;this.parts=null;this.chunks=[];this.blocks=[];},
+  Z:14,clear(){this.source=null;this.parts=null;this.chunks=[];this.blocks=[];this.raster=null;if(this.buffer)this.buffer.width=this.buffer.height=0;this.buffer=null;},
   point(x,y){return L.CRS.EPSG3857.latLngToPoint(L.latLng(MapX.p(...Fog.unmerc(x,y))),this.Z);},
   geometry(){
     if(this.source===Fog.cells&&this.count===Fog.cells.size&&this.gcj===MapX.gcj&&this.parts===FogParcels.parts)return;
-    const changed=this.source!==Fog.cells||this.count!==Fog.cells.size||this.gcj!==MapX.gcj;
+    this.raster=null;const changed=this.source!==Fog.cells||this.count!==Fog.cells.size||this.gcj!==MapX.gcj;
     if(changed){
       const chunks=new Map(),c=Fog.CELL,unit=256*2**this.Z/(2*Math.PI*6378137),r=c*.72*unit;
       const cells=Fog.cells;
@@ -8071,6 +8071,18 @@ const FogPainter={
   },
   draw(pad=0){
     const map=Fog.map,cv=Fog.canvas;if(!map||!cv)return;this.geometry();
+    const size=map.getSize(),W=size.x+2*pad,H=size.y+2*pad,dpr=Math.min(devicePixelRatio||1,2),origin=map.getPixelOrigin().subtract(map._getMapPanePos());
+    let hit=this.raster,ratio=hit?map.getZoomScale(map.getZoom(),hit.zoom):1,dx=hit?(hit.origin.x-hit.pad)*ratio-origin.x+pad:0,dy=hit?(hit.origin.y-hit.pad)*ratio-origin.y+pad:0;
+    if(!hit||hit.dpr!==dpr||ratio<.75||ratio>1.34||dx>0||dy>0||dx+hit.W*ratio<W||dy+hit.H*ratio<H){
+      const reserve=pad+Math.min(256,Math.max(128,Math.round(Math.max(size.x,size.y)*.35)));
+      this.buffer=this.buffer||document.createElement('canvas');this.paint(reserve,this.buffer);hit=this.raster={zoom:map.getZoom(),origin,pad:reserve,W:size.x+2*reserve,H:size.y+2*reserve,dpr};ratio=1;dx=pad-reserve;dy=pad-reserve;
+    }
+    cv.style.transform='';cv.style.left=cv.style.top=-pad+'px';cv._fogPad=pad;
+    const pw=Math.round(W*dpr),ph=Math.round(H*dpr);if(cv.width!==pw||cv.height!==ph){cv.width=pw;cv.height=ph;cv.style.width=W+'px';cv.style.height=H+'px';}
+    const ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,W,H);ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1;ctx.drawImage(this.buffer,dx,dy,hit.W*ratio,hit.H*ratio);
+  },
+  paint(pad=0,cv=Fog.canvas){
+    const map=Fog.map;
     const size=map.getSize(),W=size.x+pad*2,H=size.y+pad*2,dpr=Math.min(devicePixelRatio||1,2),pw=Math.round(W*dpr),ph=Math.round(H*dpr);
     cv.style.transform='';cv.style.left=cv.style.top=-pad+'px';cv._fogPad=pad;
     if(cv.width!==pw||cv.height!==ph){cv.width=pw;cv.height=ph;cv.style.width=W+'px';cv.style.height=H+'px';}

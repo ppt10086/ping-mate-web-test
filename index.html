@@ -8028,7 +8028,7 @@ const FogArchive={
     for(const who of Ping.cachedMate()?['me','partner']:['me'])FeatureCache.idle(async()=>{if(scope!==FeatureCache.scope()||epoch!==this.epoch)return;await History.fetchByDay(['all-v1',dayKey(Date.now())],null,who);},2000);
     navigator.storage?.persist?.().catch(()=>{});
   },
-  stop(){this.epoch++;this._snapshots?.clear();this.pending.clear();this.roadJobs?.clear();this.scheduled=false;this.roadScheduled=false;this._warmStamp='';this.context?.controllers.forEach(c=>c.abort());this.context?._computeCancel?.();FogDistrict._bgCancel?.();},
+  stop(){this.epoch++;this._snapshots?.clear();this.pending.clear();this.roadJobs?.clear();this.scheduled=false;this.roadScheduled=false;this._warmStamp='';this.context?.controllers.forEach(c=>c.abort());this.context?._computeCancel?.();FogDistrict._bgCancel?.();FogDistrict._bgWorker?.terminate();FogDistrict._bgWorker=null;},
   async clearOwner(user){this.stop();for(const [key,row] of this.memory)if(JSON.parse(row.scope)[0]===user)this.memory.delete(key);return this.transaction('readwrite',s=>{const r=s.openCursor();r.onsuccess=()=>{const c=r.result;if(!c)return;try{if(JSON.parse(c.value.scope)[0]===user)c.delete();}catch(e){}c.continue();};});}
 };
 window.addEventListener('ping:points-updated',event=>{const {scope,who,from,value}=event.detail||{};if(scope!==FeatureCache.scope()||!from||!value?.list?.length||value.list.length>=20000)return;const grouped={};for(const p of value.list)(grouped[dayKey(Date.parse(p.ts))]||(grouped[dayKey(Date.parse(p.ts))]=[])).push(p);FogArchive.enqueue(Object.entries(grouped).map(([key,points])=>{const a=analyzeTrack(points);return {key,paths:a.paths||[],points:a.points};}),who);});
@@ -8133,7 +8133,7 @@ window.addEventListener('ping:fog-ready',event=>{if(Fog.canvas&&event.detail.sco
 const FogDistrict={
   groups:new Map(),_seq:0,
   levelFor(z){return z>13.25||z<3?null:z>=10?'district':z>=7?'city':'province';},
-  close(){clearTimeout(this.timer);this._seq++;this._pending=null;this._key=null;this._cancel?.();this.worker=null;this.el?.remove();this.el=null;this.current=null;this.result=null;},
+  close(){clearTimeout(this.timer);this._seq++;this._pending=null;this._key=null;this._cancel?.();this.worker?.terminate();this.worker=null;this.el?.remove();this.el=null;this.current=null;this.result=null;},
   schedule(){clearTimeout(this.timer);if(Fog.canvas)this.timer=setTimeout(()=>this.update(),180);},
   async index(level='district'){
     const field=level==='district'?'_index':'_regions';
@@ -8152,12 +8152,12 @@ const FogDistrict={
     for(const province of new Set(candidates.map(f=>f.province))){const group=await this.group(province,level);if(!valid())return null;const feature=group.find(f=>candidates.some(c=>c.code===f.code)&&this.contains(f,lng,lat));if(feature)return {...feature,level};}return null;
   },
   measure(feature,data,valid,background=false){
-    return new Promise(resolve=>{let worker,timer;const field=background?'_bgWorker':'worker',cancel=background?'_bgCancel':'_cancel';
-      const finish=value=>{clearTimeout(timer);worker?.terminate();if(this[field]===worker){this[field]=null;this[cancel]=null;}resolve(valid()?value:null);};
-      try{worker=new Worker(new URL('fog-parcels.worker.js?build='+PM_BUILD.build,document.baseURI));this[field]=worker;this[cancel]=()=>finish(null);
-        worker.onmessage=e=>finish(e.data.result||null);worker.onerror=e=>{e.preventDefault();finish(null);};timer=setTimeout(()=>finish(null),15000);
-        worker.postMessage({kind:'coverage',cells:data.cells.map(p=>p[0]),parts:data.parcels,district:feature});
-      }catch(e){finish(null);}
+    return new Promise(resolve=>{let worker,timer,done=false;const field=background?'_bgWorker':'worker',cancel=background?'_bgCancel':'_cancel',id=this._measureID=(this._measureID||0)+1;
+      const finish=(value,discard=false)=>{if(done)return;done=true;clearTimeout(timer);if(discard){worker?.terminate();if(this[field]===worker)this[field]=null;}if(this[field]===worker||discard)this[cancel]=null;resolve(valid()?value:null);};
+      try{worker=this[field]||new Worker(new URL('fog-parcels.worker.js?build='+PM_BUILD.build,document.baseURI));this[field]=worker;this[cancel]=()=>finish(null,true);
+        worker.onmessage=e=>{if(e.data.id===id)finish(e.data.result||null);};worker.onerror=e=>{e.preventDefault();finish(null,true);};timer=setTimeout(()=>finish(null,true),15000);
+        worker.postMessage({id,kind:'coverage',cells:data.cells.map(p=>p[0]),parts:data.parcels,district:feature});
+      }catch(e){finish(null,true);}
     });
   },
   async area(feature,data,who,valid,background=false){

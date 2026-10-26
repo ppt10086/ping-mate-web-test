@@ -1,6 +1,6 @@
 {
-  "version": "A.3.10",
-  "build": "2026102503",
+  "version": "A.3.11",
+  "build": "2026102601",
   "transport": "browser HTTPS",
   "route": "direct Supabase"
 }
